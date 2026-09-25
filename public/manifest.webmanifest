@@ -1,0 +1,53 @@
+{
+  "name": "حَقَّ تِلَاوَتِهِ | منصة إتقان تلاوة القرآن الكريم",
+  "short_name": "حَقَّ تِلَاوَتِهِ",
+  "id": "/",
+  "description": "منصة إتقان تلاوة القرآن الكريم لتعلم أحكام التجويد ومراجعتها والاختبار فيها.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1f6b4f",
+  "background_color": "#f8faf8",
+  "categories": [
+    "education"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+  {
+    "src": "/screenshots/mobile.png",
+    "sizes": "1179x2556",
+    "type": "image/png",
+    "form_factor": "narrow",
+    "label": "الصفحة الرئيسية لمنصة حَقَّ تِلَاوَتِهِ على الهاتف"
+  },
+  {
+    "src": "/screenshots/desktop.png",
+    "sizes": "2560x1439",
+    "type": "image/png",
+    "form_factor": "wide",
+    "label": "الصفحة الرئيسية لمنصة حَقَّ تِلَاوَتِهِ على الكمبيوتر"
+  }
+]
+}

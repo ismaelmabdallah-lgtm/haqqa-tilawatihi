@@ -1,0 +1,475 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+
+  <!-- Background -->
+  <defs>
+
+    <!-- Dark green background -->
+    <radialGradient id="bg" cx="50%" cy="45%" r="75%">
+      <stop offset="0%" stop-color="#145f46"/>
+      <stop offset="70%" stop-color="#075039"/>
+      <stop offset="100%" stop-color="#023b2a"/>
+    </radialGradient>
+
+    <!-- Gold -->
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f9dc86"/>
+      <stop offset="45%" stop-color="#d9a943"/>
+      <stop offset="100%" stop-color="#a87522"/>
+    </linearGradient>
+
+    <!-- Page -->
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fffdf1"/>
+      <stop offset="70%" stop-color="#f4e7bd"/>
+      <stop offset="100%" stop-color="#dfc887"/>
+    </linearGradient>
+
+    <!-- Page shadow -->
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+
+    <!-- Soft glow -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+
+  </defs>
+
+
+  <!-- Rounded square background -->
+  <rect
+    width="512"
+    height="512"
+    rx="112"
+    fill="url(#bg)"
+  />
+
+
+  <!-- ============================= -->
+  <!-- Islamic decorative arch -->
+  <!-- ============================= -->
+
+  <path
+    d="
+      M256 58
+      C214 105 154 113 124 160
+      C104 191 105 234 105 275
+      V352
+      C105 365 116 376 129 376
+      H383
+      C396 376 407 365 407 352
+      V275
+      C407 234 408 191 388 160
+      C358 113 298 105 256 58
+      Z
+    "
+    fill="none"
+    stroke="url(#gold)"
+    stroke-width="9"
+    opacity="0.95"
+  />
+
+  <!-- Inner arch -->
+  <path
+    d="
+      M256 105
+      C228 135 191 141 171 170
+      C157 190 158 218 158 244
+      V310
+      H354
+      V244
+      C354 218 355 190 341 170
+      C321 141 284 135 256 105
+      Z
+    "
+    fill="none"
+    stroke="#d5a942"
+    stroke-width="4"
+    opacity="0.85"
+  />
+
+
+  <!-- ============================= -->
+  <!-- Central Islamic ornament -->
+  <!-- ============================= -->
+
+  <g transform="translate(256 178)">
+
+    <!-- Outer star -->
+    <path
+      d="
+        M0 -65
+        L18 -40
+        L48 -48
+        L40 -18
+        L65 0
+        L40 18
+        L48 48
+        L18 40
+        L0 65
+        L-18 40
+        L-48 48
+        L-40 18
+        L-65 0
+        L-40 -18
+        L-48 -48
+        L-18 -40
+        Z
+      "
+      fill="#0d704a"
+      stroke="url(#gold)"
+      stroke-width="4"
+    />
+
+    <!-- Inner floral shape -->
+    <path
+      d="
+        M0 -48
+        C12 -31 22 -28 39 -30
+        C34 -15 39 -5 51 0
+        C37 7 34 18 39 31
+        C23 28 12 34 0 48
+        C-12 34 -23 28 -39 31
+        C-34 18 -37 7 -51 0
+        C-39 -5 -34 -15 -39 -30
+        C-22 -28 -12 -31 0 -48
+        Z
+      "
+      fill="#188052"
+      opacity="0.95"
+    />
+
+    <!-- Center diamond -->
+    <path
+      d="M0 -20 L20 0 L0 20 L-20 0 Z"
+      fill="#07553a"
+    />
+
+    <!-- Golden center -->
+    <path
+      d="
+        M0 -10
+        L5 -5
+        L11 0
+        L5 5
+        L0 10
+        L-5 5
+        L-11 0
+        L-5 -5
+        Z
+      "
+      fill="url(#gold)"
+    />
+
+  </g>
+
+
+  <!-- ============================= -->
+  <!-- Shadow underneath Quran -->
+  <!-- ============================= -->
+
+  <ellipse
+    cx="256"
+    cy="390"
+    rx="190"
+    ry="32"
+    fill="#001e15"
+    opacity="0.5"
+    filter="url(#shadow)"
+  />
+
+
+  <!-- ============================= -->
+  <!-- Wooden Rehal -->
+  <!-- ============================= -->
+
+  <!-- Left leg -->
+  <path
+    d="
+      M104 386
+      L245 444
+      L270 425
+      L133 367
+      Z
+    "
+    fill="url(#gold)"
+    stroke="#9b6a20"
+    stroke-width="2"
+  />
+
+  <!-- Right leg -->
+  <path
+    d="
+      M408 386
+      L267 444
+      L242 425
+      L379 367
+      Z
+    "
+    fill="url(#gold)"
+    stroke="#9b6a20"
+    stroke-width="2"
+  />
+
+  <!-- Rehal upper platform -->
+  <path
+    d="
+      M92 349
+      L256 406
+      L420 349
+      L404 374
+      L256 425
+      L108 374
+      Z
+    "
+    fill="#d7a83e"
+    stroke="#9b6a20"
+    stroke-width="3"
+  />
+
+  <!-- Green cushion on rehal -->
+  <path
+    d="
+      M105 335
+      L256 388
+      L407 335
+      L393 359
+      L256 408
+      L119 359
+      Z
+    "
+    fill="#075b3f"
+  />
+
+
+  <!-- ============================= -->
+  <!-- Open Quran - left page -->
+  <!-- ============================= -->
+
+  <path
+    d="
+      M256 210
+
+      C224 185 184 176 133 188
+
+      L106 321
+
+      C157 302 207 306 256 340
+
+      Z
+    "
+    fill="url(#page)"
+    stroke="#c9a957"
+    stroke-width="3"
+  />
+
+  <!-- Left page thickness -->
+  <path
+    d="
+      M106 321
+      C157 302 207 306 256 340
+      L256 351
+      C206 318 157 315 111 333
+      Z
+    "
+    fill="#d7bd78"
+  />
+
+
+  <!-- ============================= -->
+  <!-- Open Quran - right page -->
+  <!-- ============================= -->
+
+  <path
+    d="
+      M256 210
+
+      C288 185 328 176 379 188
+
+      L406 321
+
+      C355 302 305 306 256 340
+
+      Z
+    "
+    fill="url(#page)"
+    stroke="#c9a957"
+    stroke-width="3"
+  />
+
+  <!-- Right page thickness -->
+  <path
+    d="
+      M256 340
+      C305 306 355 302 406 321
+      L401 333
+      C355 315 306 318 256 351
+      Z
+    "
+    fill="#d7bd78"
+  />
+
+
+  <!-- ============================= -->
+  <!-- Quran center binding -->
+  <!-- ============================= -->
+
+  <path
+    d="M256 210 V347"
+    stroke="#bd9138"
+    stroke-width="7"
+    stroke-linecap="round"
+  />
+
+  <path
+    d="M256 213 V343"
+    stroke="#fff6d4"
+    stroke-width="3"
+    opacity="0.8"
+  />
+
+
+  <!-- ============================= -->
+  <!-- Decorative Quran page borders -->
+  <!-- ============================= -->
+
+  <!-- Left border -->
+  <path
+    d="
+      M132 207
+      C174 196 211 202 243 220
+      V316
+      C210 300 174 297 126 311
+      Z
+    "
+    fill="none"
+    stroke="#276a48"
+    stroke-width="3"
+  />
+
+  <!-- Right border -->
+  <path
+    d="
+      M380 207
+      C338 196 301 202 269 220
+      V316
+      C302 300 338 297 386 311
+      Z
+    "
+    fill="none"
+    stroke="#276a48"
+    stroke-width="3"
+  />
+
+
+  <!-- ============================= -->
+  <!-- Arabic calligraphy-like decoration -->
+  <!-- ============================= -->
+
+  <!-- Left page decorative Arabic-inspired lines -->
+  <g
+    fill="none"
+    stroke="#286b49"
+    stroke-width="3"
+    stroke-linecap="round"
+    opacity="0.85"
+  >
+
+    <path d="M151 229 Q190 214 231 230"/>
+    <path d="M149 241 Q190 226 231 242"/>
+    <path d="M147 253 Q188 238 231 254"/>
+    <path d="M145 265 Q188 250 231 266"/>
+    <path d="M143 277 Q185 263 231 278"/>
+    <path d="M141 289 Q183 276 231 290"/>
+
+  </g>
+
+
+  <!-- Right page decorative Arabic-inspired lines -->
+  <g
+    fill="none"
+    stroke="#286b49"
+    stroke-width="3"
+    stroke-linecap="round"
+    opacity="0.85"
+  >
+
+    <path d="M361 229 Q322 214 281 230"/>
+    <path d="M363 241 Q322 226 281 242"/>
+    <path d="M365 253 Q324 238 281 254"/>
+    <path d="M367 265 Q324 250 281 266"/>
+    <path d="M369 277 Q327 263 281 278"/>
+    <path d="M371 289 Q329 276 281 290"/>
+
+  </g>
+
+
+  <!-- ============================= -->
+  <!-- Decorative page corners -->
+  <!-- ============================= -->
+
+  <path
+    d="M132 207 L146 207 L132 222 Z"
+    fill="#b8944d"
+  />
+
+  <path
+    d="M380 207 L366 207 L380 222 Z"
+    fill="#b8944d"
+  />
+
+  <path
+    d="M126 311 L141 307 L127 296 Z"
+    fill="#b8944d"
+  />
+
+  <path
+    d="M386 311 L371 307 L385 296 Z"
+    fill="#b8944d"
+  />
+
+
+  <!-- ============================= -->
+  <!-- Small golden ornament above -->
+  <!-- ============================= -->
+
+  <g transform="translate(256 88)">
+
+    <circle
+      cx="0"
+      cy="0"
+      r="18"
+      fill="url(#gold)"
+    />
+
+    <path
+      d="
+        M0 -43
+        L8 -20
+        L31 -12
+        L10 -3
+        L0 20
+        L-10 -3
+        L-31 -12
+        L-8 -20
+        Z
+      "
+      fill="url(#gold)"
+      opacity="0.95"
+    />
+
+  </g>
+
+
+  <!-- Subtle highlight -->
+  <ellipse
+    cx="256"
+    cy="105"
+    rx="125"
+    ry="45"
+    fill="#ffffff"
+    opacity="0.035"
+  />
+
+</svg>
