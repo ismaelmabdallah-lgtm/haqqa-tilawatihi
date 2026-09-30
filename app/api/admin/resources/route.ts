@@ -148,12 +148,12 @@ export async function POST(request: Request) {
       // ----------------------------------------
 
       const maxFileSize =
-        20 * 1024 * 1024;
+  50 * 1024 * 1024;
 
       if (file.size > maxFileSize) {
         return redirectWithError(
           request,
-          "حجم الملف كبير جدًا. الحد الأقصى هو 20MB.",
+          "حجم الملف كبير جدًا. الحد الأقصى هو 50MB.",
           levelId
         );
       }

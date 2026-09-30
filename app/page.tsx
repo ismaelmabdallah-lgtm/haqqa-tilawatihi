@@ -64,167 +64,113 @@ export default async function Home() {
     );
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
+    <main className="min-h-screen overflow-x-hidden bg-[var(--background)]">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#173f31]/95 text-white shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link
             href="/"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)] text-lg font-bold text-white shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#d4b56b]/30 bg-[#d4b56b]/15 text-lg font-black text-[#e8ce91]">
               ت
             </div>
 
             <div>
-              <h1 className="text-sm font-black text-[var(--foreground)] sm:text-base">
+              <h1 className="text-sm font-black sm:text-base">
                 حَقَّ تِلَاوَتِهِ
               </h1>
 
-              <p className="text-xs text-[var(--muted)]">
+              <p className="text-[11px] text-white/65 sm:text-xs">
                 منصة إتقان تلاوة القرآن الكريم
               </p>
             </div>
           </Link>
 
-          <div className="hidden rounded-full bg-[var(--primary-light)] px-4 py-2 text-sm font-bold text-[var(--primary)] sm:block">
+          <div className="hidden rounded-full border border-[#d4b56b]/20 bg-white/5 px-4 py-2 text-sm font-bold text-[#e8ce91] sm:block">
             📖 أحكام التجويد
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-[var(--border)] bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-[var(--primary-light)] text-4xl shadow-sm">
+      <section className="relative overflow-hidden bg-[#173f31] text-white">
+        {/* Decorative shapes */}
+        <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#d4b56b]/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-[#2f8063]/25 blur-3xl" />
+
+        <div className="pointer-events-none absolute inset-0 opacity-[0.05]">
+          <div className="absolute right-[12%] top-8 text-8xl">
+            ۞
+          </div>
+          <div className="absolute bottom-4 left-[15%] text-7xl">
+            ۞
+          </div>
+        </div>
+
+        <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#d4b56b]/30 bg-white/10 text-3xl shadow-lg backdrop-blur">
               📖
             </div>
 
-            <div className="mb-4 inline-flex rounded-full border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm font-bold text-[var(--primary)]">
+            <div className="mb-3 inline-flex rounded-full border border-[#d4b56b]/25 bg-[#d4b56b]/10 px-4 py-1.5 text-xs font-bold text-[#e8ce91]">
               منصة إتقان تلاوة القرآن الكريم
             </div>
 
-            <h2 className="text-4xl font-black leading-tight text-[var(--foreground)] sm:text-6xl">
+            <h2 className="text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl">
               حَقَّ تِلَاوَتِهِ
             </h2>
 
-            <p className="mt-3 text-lg font-bold text-[var(--primary)] sm:text-xl">
-              منصة إتقان تلاوة القرآن الكريم
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/70 sm:text-base">
+              تعلّم أحكام التجويد بطريقة سهلة ومنظمة، من خلال
+              المواد التعليمية والملخصات والدروس والاختبارات
+              الإلكترونية.
             </p>
-
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-[var(--muted)] sm:text-lg">
-              تعلّم أحكام التجويد بطريقة سهلة ومنظمة، من خلال المواد
-              التعليمية والملخصات والدروس والاختبارات الإلكترونية.
-            </p>
-
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                href="/tajweed/1"
-                className="rounded-2xl bg-[var(--primary)] px-7 py-4 text-sm font-black text-white shadow-sm transition hover:bg-[var(--primary-dark)]"
-              >
-                ابدأ من المستوى الأول
-              </Link>
-
-              <a
-                href="#levels"
-                className="rounded-2xl border border-[var(--border)] bg-white px-7 py-4 text-sm font-bold text-[var(--foreground)] transition hover:bg-[var(--primary-light)]"
-              >
-                استعرض المستويات
-              </a>
-            </div>
           </div>
         </div>
       </section>
 
       {/* Main */}
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-        {/* Levels */}
-        <section id="levels">
-          <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-bold text-[var(--primary)]">
-                مستويات التعلم
-              </p>
-
-              <h3 className="mt-1 text-2xl font-black text-[var(--foreground)] sm:text-3xl">
-                اختر مستواك
-              </h3>
-            </div>
-
-            <p className="text-sm leading-6 text-[var(--muted)]">
-              ابدأ من المستوى المناسب لك وتقدم خطوة بخطوة.
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <LevelCard
-              title="المستوى الأول"
-              description="ابدأ من الأساسيات"
-              number="01"
-              href="/tajweed/1"
-            />
-
-            <LevelCard
-              title="المستوى الثاني"
-              description="طوّر معرفتك بالتجويد"
-              number="02"
-              href="/tajweed/2"
-            />
-
-            <LevelCard
-              title="المستوى الثالث"
-              description="انتقل إلى مستوى متقدم"
-              number="03"
-              href="/tajweed/3"
-            />
-
-            <LevelCard
-              title="مستوى الإجازة"
-              description="للمستوى المتقدم"
-              number="04"
-              href="/tajweed/4"
-            />
-          </div>
-        </section>
-
+      <section className="mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-9">
         {/* Announcements */}
-        <section className="mt-14">
-          <div className="mb-7 flex items-end justify-between gap-4">
+        <section>
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold text-[var(--primary)]">
-                📢 آخر الأخبار
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#f5ead0] text-base">
+                  📢
+                </span>
+
+                <h3 className="text-xl font-black text-[var(--foreground)] sm:text-2xl">
+                  الإعلانات
+                </h3>
+              </div>
+
+              <p className="mt-1 mr-10 text-xs text-[var(--muted)]">
+                آخر المواعيد والتنبيهات المهمة
               </p>
-
-              <h3 className="mt-1 text-2xl font-black text-[var(--foreground)] sm:text-3xl">
-                إعلانات مهمة
-              </h3>
-            </div>
-
-            <div className="hidden h-11 w-11 items-center justify-center rounded-xl bg-[#f7f1e5] text-xl sm:flex">
-              📢
             </div>
           </div>
 
           {announcementsWithImages.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {announcementsWithImages.map(
                 (announcement) => (
                   <article
                     key={announcement.id}
-                    className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-sm transition hover:shadow-md"
+                    className="overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-sm transition duration-200 hover:shadow-md"
                   >
-                    <div className="border-r-4 border-[var(--primary)] p-5 sm:p-6">
-                      {/* Announcement Header */}
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="border-r-4 border-[#b8944d]">
+                      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
                         <div className="flex min-w-0 items-start gap-3">
                           <div
-                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl ${
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
                               announcement.type === "image"
-                                ? "bg-purple-100"
+                                ? "bg-purple-50"
                                 : announcement.type ===
                                     "link"
-                                  ? "bg-blue-100"
+                                  ? "bg-blue-50"
                                   : "bg-[var(--primary-light)]"
                             }`}
                           >
@@ -237,13 +183,13 @@ export default async function Home() {
                           </div>
 
                           <div className="min-w-0">
-                            <h4 className="text-lg font-black leading-8 text-[var(--foreground)]">
+                            <h4 className="text-base font-black leading-7 text-[var(--foreground)] sm:text-lg">
                               {announcement.title}
                             </h4>
 
                             <time
                               dateTime={announcement.date}
-                              className="mt-1 block text-xs font-bold text-[var(--muted)]"
+                              className="mt-0.5 block text-[11px] font-bold text-[var(--muted)]"
                             >
                               📅{" "}
                               {formatArabicDate(
@@ -257,27 +203,41 @@ export default async function Home() {
                       {/* Text Announcement */}
                       {announcement.type === "text" &&
                         announcement.body && (
-                          <div className="mt-5 rounded-2xl bg-[var(--background)] px-4 py-4">
-                            <p className="whitespace-pre-line text-sm leading-8 text-[var(--foreground)]">
-                              {announcement.body}
-                            </p>
+                          <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+                            <div className="rounded-xl bg-[var(--background)] px-4 py-3">
+                              <p className="whitespace-pre-line text-sm leading-7 text-[var(--foreground)]">
+                                {announcement.body}
+                              </p>
+                            </div>
                           </div>
                         )}
 
                       {/* Image Announcement */}
                       {announcement.type === "image" &&
                         announcement.imageUrl && (
-                          <div className="mt-5 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)]">
-                            {announcement.link_url ? (
-                              <a
-                                href={
-                                  announcement.link_url
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={`فتح رابط ${announcement.title}`}
-                                className="block"
-                              >
+                          <div className="px-3 pb-3 sm:px-4 sm:pb-4">
+                            <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--background)]">
+                              {announcement.link_url ? (
+                                <a
+                                  href={
+                                    announcement.link_url
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label={`فتح رابط ${announcement.title}`}
+                                  className="block"
+                                >
+                                  <img
+                                    src={
+                                      announcement.imageUrl
+                                    }
+                                    alt={
+                                      announcement.title
+                                    }
+                                    className="mx-auto block max-h-[360px] w-auto max-w-full object-contain transition duration-200 hover:scale-[1.01]"
+                                  />
+                                </a>
+                              ) : (
                                 <img
                                   src={
                                     announcement.imageUrl
@@ -285,53 +245,47 @@ export default async function Home() {
                                   alt={
                                     announcement.title
                                   }
-                                  className="max-h-[650px] w-full object-contain transition duration-200 hover:scale-[1.01]"
+                                  className="mx-auto block max-h-[360px] w-auto max-w-full object-contain"
                                 />
-                              </a>
-                            ) : (
-                              <img
-                                src={
-                                  announcement.imageUrl
-                                }
-                                alt={
-                                  announcement.title
-                                }
-                                className="max-h-[650px] w-full object-contain"
-                              />
-                            )}
+                              )}
+                            </div>
                           </div>
                         )}
 
                       {/* Optional text under image */}
                       {announcement.type === "image" &&
                         announcement.body && (
-                          <div className="mt-4 rounded-2xl bg-[var(--background)] px-4 py-4">
-                            <p className="whitespace-pre-line text-sm leading-8 text-[var(--foreground)]">
-                              {announcement.body}
-                            </p>
+                          <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+                            <div className="rounded-xl bg-[var(--background)] px-4 py-3">
+                              <p className="whitespace-pre-line text-sm leading-7 text-[var(--foreground)]">
+                                {announcement.body}
+                              </p>
+                            </div>
                           </div>
                         )}
 
                       {/* Link Announcement */}
                       {announcement.type === "link" &&
                         announcement.body && (
-                          <div className="mt-5 rounded-2xl bg-[var(--background)] px-4 py-4">
-                            <p className="whitespace-pre-line text-sm leading-8 text-[var(--foreground)]">
-                              {announcement.body}
-                            </p>
+                          <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+                            <div className="rounded-xl bg-[var(--background)] px-4 py-3">
+                              <p className="whitespace-pre-line text-sm leading-7 text-[var(--foreground)]">
+                                {announcement.body}
+                              </p>
+                            </div>
                           </div>
                         )}
 
                       {announcement.type === "link" &&
                         announcement.link_url && (
-                          <div className="mt-5">
+                          <div className="px-4 pb-4 sm:px-5 sm:pb-5">
                             <a
                               href={
                                 announcement.link_url
                               }
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--primary)] px-5 py-4 text-sm font-black text-white transition hover:bg-[var(--primary-dark)] sm:w-auto"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--primary-dark)] sm:w-auto"
                             >
                               فتح الرابط
                               <span>↗</span>
@@ -342,10 +296,13 @@ export default async function Home() {
                       {/* Fallback if image is missing */}
                       {announcement.type === "image" &&
                         !announcement.imageUrl && (
-                          <div className="mt-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-5 text-center">
-                            <p className="text-sm font-bold text-red-700">
-                              تعذر تحميل صورة الإعلان حاليًا.
-                            </p>
+                          <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+                            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-4 text-center">
+                              <p className="text-sm font-bold text-red-700">
+                                تعذر تحميل صورة الإعلان
+                                حاليًا.
+                              </p>
+                            </div>
                           </div>
                         )}
                     </div>
@@ -354,67 +311,106 @@ export default async function Home() {
               )}
             </div>
           ) : (
-            <div className="rounded-3xl border border-[var(--border)] bg-white px-6 py-10 text-center shadow-sm">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--primary-light)] text-2xl">
+            <div className="rounded-2xl border border-[var(--border)] bg-white px-6 py-8 text-center shadow-sm">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--primary-light)] text-xl">
                 📢
               </div>
 
-              <p className="mt-4 font-black text-[var(--foreground)]">
+              <p className="mt-3 font-black text-[var(--foreground)]">
                 لا توجد إعلانات حاليًا
               </p>
 
-              <p className="mt-2 text-sm text-[var(--muted)]">
-                ستظهر هنا الإعلانات والمواعيد المهمة عند نشرها.
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                ستظهر هنا الإعلانات والمواعيد المهمة عند
+                نشرها.
               </p>
             </div>
           )}
         </section>
 
-        {/* About */}
-        <section className="mt-14">
-          <div className="rounded-3xl border border-[var(--border)] bg-white p-6 shadow-sm sm:p-8">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-light)] text-2xl">
-                📖
-              </div>
+        {/* Levels */}
+        <section id="levels" className="mt-8 sm:mt-10">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--primary-light)] text-base">
+                  📚
+                </span>
 
-              <div>
-                <p className="text-sm font-bold text-[var(--primary)]">
-                  عن المنصة
-                </p>
-
-                <h3 className="mt-1 text-xl font-black text-[var(--foreground)]">
-                  حَقَّ تِلَاوَتِهِ
+                <h3 className="text-xl font-black text-[var(--foreground)] sm:text-2xl">
+                  مستويات التجويد
                 </h3>
-
-                <p className="mt-3 text-sm leading-8 text-[var(--muted)]">
-                  منصة إتقان تلاوة القرآن الكريم، تهدف إلى تسهيل تعلم أحكام
-                  التجويد ومراجعتها من خلال المواد التعليمية والملخصات
-                  والدروس والاختبارات الإلكترونية، بطريقة منظمة وسهلة
-                  للطلاب والمتعلمين.
-                </p>
               </div>
+
+              <p className="mt-1 mr-10 text-xs text-[var(--muted)]">
+                اختر المستوى المناسب وابدأ التعلم
+              </p>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+            <LevelCard
+              title="المستوى الأول"
+              number="01"
+              href="/tajweed/1"
+              className="bg-[#eaf5ef] text-[#1f6b4f] border-[#cce5d8]"
+              badgeClassName="bg-[#1f6b4f] text-white"
+            />
+
+            <LevelCard
+              title="المستوى الثاني"
+              number="02"
+              href="/tajweed/2"
+              className="bg-[#eef2fb] text-[#405a9b] border-[#d7dff2]"
+              badgeClassName="bg-[#405a9b] text-white"
+            />
+
+            <LevelCard
+              title="المستوى الثالث"
+              number="03"
+              href="/tajweed/3"
+              className="bg-[#f8f1df] text-[#987638] border-[#eadbb7]"
+              badgeClassName="bg-[#b8944d] text-white"
+            />
+
+            <LevelCard
+              title="مستوى الإجازة"
+              number="04"
+              href="/tajweed/4"
+              className="bg-[#f3ebf8] text-[#76518d] border-[#e3d3ed]"
+              badgeClassName="bg-[#76518d] text-white"
+            />
           </div>
         </section>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--border)] bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-8 text-center sm:px-6">
-          <p className="text-base font-black text-[var(--foreground)]">
+      <footer className="mt-2 border-t border-[var(--border)] bg-[#173f31] text-white">
+        <div className="mx-auto max-w-6xl px-4 py-7 text-center sm:px-6">
+          <p className="text-base font-black">
             حَقَّ تِلَاوَتِهِ
           </p>
 
-          <p className="mt-1 text-sm font-bold text-[var(--primary)]">
+          <p className="mt-1 text-sm font-bold text-[#e8ce91]">
             منصة إتقان تلاوة القرآن الكريم
           </p>
 
-          <div className="mx-auto my-4 h-px max-w-xs bg-[var(--border)]" />
+          <div className="mx-auto my-4 h-px max-w-xs bg-white/10" />
 
-          <p className="text-xs leading-6 text-[var(--muted)]">
-            من إعداد وإشراف دار القرآن في مسجد النبي شعيب عليه السلام
+          <p className="text-xs leading-6 text-white/60">
+            من إعداد وإشراف دار القرآن في مسجد النبي شعيب
+            عليه السلام
           </p>
+          <p className="mt-2 text-sm text-white/70">
+  للتواصل مع المطور:
+  <a
+    href="tel:0786050144"
+    className="mr-1 font-semibold text-[var(--gold)] hover:underline"
+    dir="ltr"
+  >
+    0786050144
+  </a>
+</p>
         </div>
       </footer>
     </main>
@@ -423,41 +419,37 @@ export default async function Home() {
 
 function LevelCard({
   title,
-  description,
   number,
   href,
+  className,
+  badgeClassName,
 }: {
   title: string;
-  description: string;
   number: string;
   href: string;
+  className: string;
+  badgeClassName: string;
 }) {
   return (
     <Link
       href={href}
-      className="group relative overflow-hidden rounded-3xl border border-[var(--border)] bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[var(--primary)] hover:shadow-md"
+      className={`group relative flex min-h-[96px] items-center justify-between gap-2 overflow-hidden rounded-2xl border p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] sm:min-h-[108px] sm:rounded-2xl sm:p-4 ${className}`}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-light)] text-sm font-black text-[var(--primary)]">
+      <div className="min-w-0">
+        <span
+          className={`mb-2 inline-flex h-7 min-w-7 items-center justify-center rounded-lg px-2 text-[10px] font-black ${badgeClassName}`}
+        >
           {number}
-        </div>
-
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--background)] text-lg text-[var(--muted)] transition group-hover:bg-[var(--primary-light)] group-hover:text-[var(--primary)]">
-          ←
         </span>
+
+        <h4 className="text-sm font-black leading-6 sm:text-base">
+          {title}
+        </h4>
       </div>
 
-      <h4 className="mt-6 text-lg font-black text-[var(--foreground)]">
-        {title}
-      </h4>
-
-      <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-        {description}
-      </p>
-
-      <div className="mt-5 text-xs font-bold text-[var(--primary)]">
-        دخول المستوى ←
-      </div>
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/70 text-sm font-black opacity-70 transition group-hover:translate-x-[-2px] group-hover:opacity-100">
+        ←
+      </span>
     </Link>
   );
 }

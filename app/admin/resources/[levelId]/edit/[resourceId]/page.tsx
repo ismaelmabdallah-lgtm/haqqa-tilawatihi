@@ -200,12 +200,12 @@ async function updateResource(formData: FormData) {
     file.size > 0
   ) {
     const maxFileSize =
-      20 * 1024 * 1024;
+  50 * 1024 * 1024;
 
     if (file.size > maxFileSize) {
       redirect(
         `/admin/resources/${levelId}/edit/${resourceId}?error=${encodeURIComponent(
-          "حجم الملف كبير جدًا. الحد الأقصى هو 20MB."
+          "حجم الملف كبير جدًا. الحد الأقصى هو 50MB."
         )}`
       );
     }

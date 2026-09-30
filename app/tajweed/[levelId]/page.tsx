@@ -107,8 +107,7 @@ export default async function LevelPage({
   }
 
   // ==========================================
-  // Load quiz settings, chapters and
-  // active question counts
+  // Load chapters + quiz settings + questions
   // ==========================================
 
   const [
@@ -197,7 +196,7 @@ export default async function LevelPage({
   };
 
   // ==========================================
-  // Create fresh signed URLs for resources
+  // Create fresh signed URLs
   // ==========================================
 
   const allResources: Resource[] =
@@ -275,49 +274,59 @@ export default async function LevelPage({
   // ==========================================
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <main className="min-h-screen bg-[#f6f8f6]">
+
+      {/* ========================================
+          Header
+      ======================================== */}
+
+      <header className="sticky top-0 z-40 border-b border-[#dfe8e2] bg-white/95 backdrop-blur">
+        <div className="mx-auto flex min-h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+
           <a
             href="/"
-            className="flex items-center gap-3"
+            className="flex items-center gap-2.5"
             aria-label="العودة إلى الصفحة الرئيسية"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)] text-lg font-bold text-white shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1f6b4f] text-base font-bold text-white shadow-sm">
               ت
             </div>
 
             <div>
-              <h1 className="text-sm font-bold text-[var(--foreground)] sm:text-base">
-                مسجد النبي شعيب عليه السلام
+              <h1 className="text-sm font-bold text-[#17251f]">
+                حَقَّ تِلَاوَتِهِ
               </h1>
 
-              <p className="text-xs text-[var(--muted)]">
-                منصة أحكام التجويد
+              <p className="text-[11px] text-[#6a776f]">
+                منصة إتقان تلاوة القرآن الكريم
               </p>
             </div>
           </a>
 
           <a
             href="/tajweed"
-            className="rounded-xl bg-[var(--primary-light)] px-3 py-2 text-sm font-bold text-[var(--primary)] transition hover:bg-[var(--primary)] hover:text-white"
+            className="rounded-xl bg-[#edf5f0] px-3 py-2 text-xs font-bold text-[#1f6b4f] transition hover:bg-[#1f6b4f] hover:text-white"
           >
             أحكام التجويد
           </a>
         </div>
       </header>
 
-      {/* Main */}
-      <section className="mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
+      {/* ========================================
+          Main
+      ======================================== */}
+
+      <section className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-7">
+
         {/* Breadcrumb */}
+
         <nav
           aria-label="مسار الصفحة"
-          className="mb-7 flex flex-wrap items-center gap-2 text-sm text-[var(--muted)]"
+          className="mb-4 flex flex-wrap items-center gap-2 text-xs text-[#748078]"
         >
           <a
             href="/"
-            className="transition hover:text-[var(--primary)]"
+            className="transition hover:text-[#1f6b4f]"
           >
             الرئيسية
           </a>
@@ -326,90 +335,114 @@ export default async function LevelPage({
 
           <a
             href="/tajweed"
-            className="transition hover:text-[var(--primary)]"
+            className="transition hover:text-[#1f6b4f]"
           >
             أحكام التجويد
           </a>
 
           <span>←</span>
 
-          <span className="font-bold text-[var(--foreground)]">
+          <span className="font-bold text-[#17251f]">
             {level.title}
           </span>
         </nav>
 
-        {/* Level Hero */}
-        <section className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-sm">
-          <div className="border-r-4 border-[var(--primary)] p-6 sm:p-9">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-light)] text-3xl">
-                📖
-              </div>
+        {/* ========================================
+            Level Header
+        ======================================== */}
 
-              <div className="min-w-0">
-                <div className="mb-2 inline-flex rounded-full bg-[var(--primary-light)] px-3 py-1 text-xs font-bold text-[var(--primary)]">
-                  المستوى {level.order}
-                </div>
+        <section className="overflow-hidden rounded-2xl border border-[#dce7e0] bg-gradient-to-l from-[#e8f3ed] via-white to-white shadow-sm">
+          <div className="flex items-center gap-4 border-r-4 border-[#1f6b4f] px-5 py-5 sm:px-7">
 
-                <h2 className="text-2xl font-black text-[var(--foreground)] sm:text-3xl">
-                  {level.title}
-                </h2>
-
-                {level.description && (
-                  <p className="mt-3 max-w-3xl text-sm leading-8 text-[var(--muted)] sm:text-base">
-                    {level.description}
-                  </p>
-                )}
-              </div>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#1f6b4f] text-2xl text-white shadow-sm">
+              📖
             </div>
+
+            <div className="min-w-0">
+              <div className="mb-1 inline-flex rounded-full bg-[#dceee5] px-2.5 py-1 text-[10px] font-bold text-[#1f6b4f]">
+                المستوى {level.order}
+              </div>
+
+              <h2 className="text-xl font-black text-[#17251f] sm:text-2xl">
+                {level.title}
+              </h2>
+
+              {level.description && (
+                <p className="mt-1 text-xs leading-6 text-[#68756e] sm:text-sm">
+                  {level.description}
+                </p>
+              )}
+            </div>
+
           </div>
         </section>
 
-        {/* Quick Navigation */}
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <QuickLink
-            href="#curriculum"
-            icon="📘"
-            title="المادة التعليمية"
-          />
+        {/* ========================================
+            Chapters
+        ======================================== */}
 
-          <QuickLink
-            href="#summary"
-            icon="📄"
-            title="الملخص"
-          />
+        {activeChapters.length > 0 && (
+          <section className="mt-5">
 
-          <QuickLink
-            href="#explanations"
-            icon="🎥"
-            title="الشروحات"
-          />
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f1e9d8] text-sm">
+                📚
+              </div>
 
-          <QuickLink
-            href="#quizzes"
-            icon="📝"
-            title="الاختبارات"
-          />
-        </div>
+              <div>
+                <h3 className="text-base font-black text-[#17251f]">
+                  أبواب المستوى
+                </h3>
 
-        {/* Curriculum */}
+                <p className="text-[11px] text-[#748078]">
+                  الأبواب التي يتضمنها هذا المستوى
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {activeChapters.map((chapter, index) => (
+                <div
+                  key={chapter.id}
+                  className="flex items-center gap-3 rounded-xl border border-[#e4e8e4] bg-white px-4 py-3 shadow-sm"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f5f0e5] text-xs font-black text-[#9a7835]">
+                    {index + 1}
+                  </div>
+
+                  <span className="min-w-0 text-sm font-bold text-[#27352e]">
+                    {chapter.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+          </section>
+        )}
+
+        {/* ========================================
+            Educational Material
+        ======================================== */}
+
         <section
           id="curriculum"
-          className="mt-10 scroll-mt-24"
+          className="mt-7 scroll-mt-20"
         >
           <SectionHeading
             icon="📘"
             title="المادة التعليمية"
             description="المادة التعليمية الكاملة لهذا المستوى."
+            color="green"
           />
 
           {curriculum.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="grid gap-2">
               {curriculum.map((resource) => (
                 <ResourceCard
                   key={resource.id}
                   resource={resource}
                   icon="📘"
+                  color="green"
                 />
               ))}
             </div>
@@ -418,24 +451,29 @@ export default async function LevelPage({
           )}
         </section>
 
-        {/* Summary */}
+        {/* ========================================
+            Summary
+        ======================================== */}
+
         <section
           id="summary"
-          className="mt-10 scroll-mt-24"
+          className="mt-7 scroll-mt-20"
         >
           <SectionHeading
             icon="📄"
-            title="ملخص المستوى"
+            title="الملخص"
             description="ملخص المادة التعليمية لهذا المستوى."
+            color="blue"
           />
 
           {summaries.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="grid gap-2">
               {summaries.map((resource) => (
                 <ResourceCard
                   key={resource.id}
                   resource={resource}
                   icon="📄"
+                  color="blue"
                 />
               ))}
             </div>
@@ -444,19 +482,23 @@ export default async function LevelPage({
           )}
         </section>
 
-        {/* Explanations */}
+        {/* ========================================
+            Explanations
+        ======================================== */}
+
         <section
           id="explanations"
-          className="mt-10 scroll-mt-24"
+          className="mt-7 scroll-mt-20"
         >
           <SectionHeading
             icon="🎥"
-            title="الدروس والشروحات"
-            description="الشروحات والروابط التعليمية الخاصة بهذا المستوى."
+            title="الشروحات"
+            description="الدروس والروابط التعليمية الخاصة بهذا المستوى."
+            color="purple"
           />
 
           {explanations.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
               {explanations.map((resource) => (
                 <ResourceCard
                   key={resource.id}
@@ -466,6 +508,7 @@ export default async function LevelPage({
                       ? "🎥"
                       : "🔗"
                   }
+                  color="purple"
                 />
               ))}
             </div>
@@ -474,21 +517,26 @@ export default async function LevelPage({
           )}
         </section>
 
-        {/* Ready-made exams */}
-        <section className="mt-10">
+        {/* ========================================
+            Ready-made Exams
+        ======================================== */}
+
+        <section className="mt-7">
           <SectionHeading
-            icon="📄"
+            icon="📝"
             title="اختبارات جاهزة"
-            description="اختبارات وملفات جاهزة يمكن للطالب الاطلاع عليها اختياريًا."
+            description="ملفات اختبارات يمكن للطالب الاطلاع عليها اختياريًا."
+            color="gold"
           />
 
           {exams.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="grid gap-2">
               {exams.map((resource) => (
                 <ResourceCard
                   key={resource.id}
                   resource={resource}
                   icon="📝"
+                  color="gold"
                 />
               ))}
             </div>
@@ -497,26 +545,27 @@ export default async function LevelPage({
           )}
         </section>
 
-        {/* Electronic Quizzes */}
+        {/* ========================================
+            Electronic Quizzes
+        ======================================== */}
+
         <section
           id="quizzes"
-          className="mt-10 scroll-mt-24"
+          className="mt-7 scroll-mt-20"
         >
-          <div className="mb-5 rounded-3xl border border-[var(--border)] bg-white p-5 shadow-sm sm:p-7">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-light)] text-2xl">
-                📝
-              </div>
+          <div className="mb-4 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#e9f3ee] text-sm">
+              📝
+            </div>
 
-              <div>
-                <h3 className="text-xl font-black text-[var(--foreground)] sm:text-2xl">
-                  الاختبارات الإلكترونية
-                </h3>
+            <div>
+              <h3 className="text-base font-black text-[#17251f]">
+                الاختبارات الإلكترونية
+              </h3>
 
-                <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-                  اختبر فهمك للمادة من خلال اختبار شامل للمستوى أو تدرب على باب محدد.
-                </p>
-              </div>
+              <p className="text-[11px] text-[#748078]">
+                اختبر فهمك للمادة وتدرّب على الأبواب.
+              </p>
             </div>
           </div>
 
@@ -527,20 +576,29 @@ export default async function LevelPage({
             settings={settings}
           />
         </section>
+
       </section>
 
-      {/* Footer */}
-      <footer className="mt-6 border-t border-[var(--border)] bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-7 text-center sm:px-6">
-          <p className="text-sm font-bold text-[var(--foreground)]">
-            مسجد النبي شعيب عليه السلام
+      {/* ========================================
+          Footer
+      ======================================== */}
+
+      <footer className="mt-8 border-t border-[#dfe8e2] bg-[#173f31]">
+        <div className="mx-auto max-w-6xl px-4 py-6 text-center sm:px-6">
+          <p className="text-sm font-bold text-white">
+            حَقَّ تِلَاوَتِهِ
           </p>
 
-          <p className="mt-1 text-xs text-[var(--muted)]">
-            منصة أحكام التجويد
+          <p className="mt-1 text-[11px] text-[#c7d8cf]">
+            منصة إتقان تلاوة القرآن الكريم
+          </p>
+
+          <p className="mt-2 text-[10px] text-[#a9c1b5]">
+            من إعداد وإشراف دار القرآن في مسجد النبي شعيب عليه السلام
           </p>
         </div>
       </footer>
+
     </main>
   );
 }
@@ -553,62 +611,54 @@ function SectionHeading({
   icon,
   title,
   description,
+  color,
 }: {
   icon: string;
   title: string;
   description: string;
+  color: "green" | "blue" | "purple" | "gold";
 }) {
+  const colors = {
+    green: {
+      box: "bg-[#e8f3ed]",
+      text: "text-[#1f6b4f]",
+    },
+    blue: {
+      box: "bg-[#eaf1f7]",
+      text: "text-[#416b8d]",
+    },
+    purple: {
+      box: "bg-[#f0ebf5]",
+      text: "text-[#765b91]",
+    },
+    gold: {
+      box: "bg-[#f5efdf]",
+      text: "text-[#94743a]",
+    },
+  };
+
+  const current = colors[color];
+
   return (
-    <div className="mb-5">
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary-light)] text-xl">
-          {icon}
-        </div>
-
-        <div>
-          <h3 className="text-xl font-black text-[var(--foreground)]">
-            {title}
-          </h3>
-
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            {description}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// Quick Link
-// ==========================================
-
-function QuickLink({
-  href,
-  icon,
-  title,
-}: {
-  href: string;
-  icon: string;
-  title: string;
-}) {
-  return (
-    <a
-      href={href}
-      className="group flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 shadow-sm transition hover:border-[var(--primary)] hover:bg-[var(--primary-light)]"
-    >
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--background)] text-lg transition group-hover:bg-white">
+    <div className="mb-3 flex items-center gap-2.5">
+      <div
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base ${current.box}`}
+      >
         {icon}
       </div>
 
-      <span className="flex-1 text-sm font-bold text-[var(--foreground)]">
-        {title}
-      </span>
+      <div className="min-w-0">
+        <h3
+          className={`text-base font-black ${current.text}`}
+        >
+          {title}
+        </h3>
 
-      <span className="text-sm text-[var(--muted)] transition group-hover:text-[var(--primary)]">
-        ←
-      </span>
-    </a>
+        <p className="text-[11px] text-[#748078]">
+          {description}
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -619,47 +669,76 @@ function QuickLink({
 function ResourceCard({
   resource,
   icon,
+  color,
 }: {
   resource: DisplayResource;
   icon: string;
+  color: "green" | "blue" | "purple" | "gold";
 }) {
   const resourceUrl = resource.displayUrl;
 
+  const colors = {
+    green: {
+      icon: "bg-[#e8f3ed] text-[#1f6b4f]",
+      button: "bg-[#1f6b4f] hover:bg-[#174f3b]",
+    },
+    blue: {
+      icon: "bg-[#eaf1f7] text-[#416b8d]",
+      button: "bg-[#416b8d] hover:bg-[#345974]",
+    },
+    purple: {
+      icon: "bg-[#f0ebf5] text-[#765b91]",
+      button: "bg-[#765b91] hover:bg-[#624a79]",
+    },
+    gold: {
+      icon: "bg-[#f5efdf] text-[#94743a]",
+      button: "bg-[#94743a] hover:bg-[#795f30]",
+    },
+  };
+
+  const current = colors[color];
+
   return (
-    <div className="rounded-3xl border border-[var(--border)] bg-white p-5 shadow-sm transition hover:shadow-md sm:p-6">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-light)] text-xl">
-            {icon}
-          </div>
+    <div className="flex min-h-[62px] items-center gap-3 rounded-xl border border-[#e1e7e3] bg-white px-3 py-2.5 shadow-sm transition hover:shadow-md">
 
-          <div className="min-w-0">
-            <h4 className="font-black leading-7 text-[var(--foreground)]">
-              {resource.title}
-            </h4>
+      {/* Icon */}
 
-            <p className="mt-1 text-xs font-medium text-[var(--muted)]">
-              {getResourceTypeLabel(resource.type)}
-            </p>
-          </div>
-        </div>
-
-        {resourceUrl ? (
-          <a
-            href={resourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--primary-dark)]"
-          >
-            فتح المحتوى
-            <span className="mr-2">←</span>
-          </a>
-        ) : (
-          <span className="text-sm text-[var(--muted)]">
-            المحتوى غير متاح حاليًا
-          </span>
-        )}
+      <div
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base ${current.icon}`}
+      >
+        {icon}
       </div>
+
+      {/* Title */}
+
+      <div className="min-w-0 flex-1">
+        <h4 className="truncate text-sm font-bold text-[#24332c]">
+          {resource.title}
+        </h4>
+
+        <p className="mt-0.5 text-[10px] font-medium text-[#7a867f]">
+          {getResourceTypeLabel(resource.type)}
+        </p>
+      </div>
+
+      {/* Open */}
+
+      {resourceUrl ? (
+        <a
+          href={resourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`inline-flex shrink-0 items-center justify-center rounded-lg px-3.5 py-2 text-xs font-bold text-white transition ${current.button}`}
+        >
+          فتح
+          <span className="mr-1.5">←</span>
+        </a>
+      ) : (
+        <span className="shrink-0 rounded-lg bg-[#f1f3f1] px-3 py-2 text-[10px] font-medium text-[#7b857f]">
+          غير متاح
+        </span>
+      )}
+
     </div>
   );
 }
@@ -674,12 +753,8 @@ function EmptyCard({
   text: string;
 }) {
   return (
-    <div className="rounded-3xl border border-dashed border-[var(--border)] bg-white p-8 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--background)] text-2xl">
-        📭
-      </div>
-
-      <p className="mt-3 text-sm font-medium text-[var(--muted)]">
+    <div className="rounded-xl border border-dashed border-[#dce4df] bg-white px-5 py-5 text-center">
+      <p className="text-xs font-medium text-[#7a867f]">
         {text}
       </p>
     </div>
