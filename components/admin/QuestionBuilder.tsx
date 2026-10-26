@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   CellOption,
   ConditionalNode,
@@ -61,6 +61,19 @@ const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   advanced: "متقدم",
 };
 
+const TASHKEEL_CHARS = [
+  { label: "َ", name: "فتحة", char: "َ" },
+  { label: "ً", name: "تنوين فتح", char: "ً" },
+  { label: "ُ", name: "ضمة", char: "ُ" },
+  { label: "ٌ", name: "تنوين ضم", char: "ٌ" },
+  { label: "ِ", name: "كسرة", char: "ِ" },
+  { label: "ٍ", name: "تنوين كسر", char: "ٍ" },
+  { label: "ّ", name: "شدة", char: "ّ" },
+  { label: "ْ", name: "سكون", char: "ْ" },
+  { label: "ٰ", name: "ألف خنجرية", char: "ٰ" },
+  { label: "ـ", name: "تطويل", char: "ـ" },
+];
+
 function makeId(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random()
     .toString(36)
@@ -69,11 +82,9 @@ function makeId(prefix: string) {
 
 function toNumber(value: string, fallback = 1) {
   const number = Number(value);
-
   if (!Number.isFinite(number)) {
     return fallback;
   }
-
   return number;
 }
 
@@ -416,16 +427,15 @@ export default function QuestionBuilder({
   onSaved,
   onCancel,
 }: QuestionBuilderProps) {
-  const [questionType, setQuestionType] =
-    useState<QuestionType>("mcq");
+  const [questionType, setQuestionType] = useState<QuestionType>("mcq");
 
+  // الاحتفاظ بالباب والصعوبة المختارة
   const [chapterId, setChapterId] = useState(
     chapters[0]?.id ? String(chapters[0].id) : ""
   );
 
   const [questionText, setQuestionText] = useState("");
-  const [difficulty, setDifficulty] =
-    useState<Difficulty>("medium");
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
 
   const [points, setPoints] = useState("1");
   const [explanation, setExplanation] = useState("");
@@ -437,24 +447,11 @@ export default function QuestionBuilder({
   const [optionD, setOptionD] = useState("");
   const [correctOption, setCorrectOption] = useState("a");
 
-  const [tableData, setTableData] =
-    useState<TableQuestionData>(createEmptyTableData());
-
-  const [cutJoinData, setCutJoinData] = useState<{
-    sections: CutJoinSection[];
-  }>(createEmptyCutJoinData());
-
-  const [conditionalData, setConditionalData] = useState(
-    createEmptyConditionalData()
-  );
-
-  const [orderingData, setOrderingData] =
-    useState<OrderingQuestionData>(createEmptyOrderingData());
-
-  const [fillBlanksData, setFillBlanksData] =
-    useState<FillBlanksQuestionData>(
-      createEmptyFillBlanksData()
-    );
+  const [tableData, setTableData] = useState<TableQuestionData>(createEmptyTableData());
+  const [cutJoinData, setCutJoinData] = useState<{ sections: CutJoinSection[] }>(createEmptyCutJoinData());
+  const [conditionalData, setConditionalData] = useState(createEmptyConditionalData());
+  const [orderingData, setOrderingData] = useState<OrderingQuestionData>(createEmptyOrderingData());
+  const [fillBlanksData, setFillBlanksData] = useState<FillBlanksQuestionData>(createEmptyFillBlanksData());
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -462,14 +459,38 @@ export default function QuestionBuilder({
 
   const isEditing = Boolean(question?.id);
 
+  // مرجع لآخر حقل إدخال تم التفاعل معه لتطبيق التشكيل السريع
+  const lastActiveInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+
   useEffect(() => {
     if (!question) {
-      setQuestionType("mcq");
-      setChapterId(
-        chapters[0]?.id ? String(chapters[0].id) : ""
-      );
+      if (typeof window !== "undefined") {
+        const savedChapter = localStorage.getItem(`qb_chapter_${levelId}`);
+        const savedDifficulty = localStorage.getItem("qb_difficulty") as Difficulty;
+        const savedType = localStorage.getItem("qb_type") as QuestionType;
+
+        if (savedChapter && chapters.some((c) => String(c.id) === savedChapter)) {
+          setChapterId(savedChapter);
+        } else {
+          setChapterId(chapters[0]?.id ? String(chapters[0].id) : "");
+        }
+
+        if (savedDifficulty && ["easy", "medium", "advanced"].includes(savedDifficulty)) {
+          setDifficulty(savedDifficulty);
+        }
+
+        if (savedType && Object.keys(QUESTION_TYPE_LABELS).includes(savedType)) {
+          setQuestionType(savedType);
+        } else {
+          setQuestionType("table");
+        }
+      } else {
+        setQuestionType("table");
+        setChapterId(chapters[0]?.id ? String(chapters[0].id) : "");
+        setDifficulty("medium");
+      }
+
       setQuestionText("");
-      setDifficulty("medium");
       setPoints("1");
       setExplanation("");
       setIsActive(true);
@@ -501,19 +522,62 @@ export default function QuestionBuilder({
     setCorrectOption(question.correct_option ?? "a");
 
     setTableData(normalizeTableData(question.question_data));
-    setCutJoinData(
-      normalizeCutJoinData(question.question_data)
-    );
-    setConditionalData(
-      normalizeConditionalData(question.question_data)
-    );
-    setOrderingData(
-      normalizeOrderingData(question.question_data)
-    );
-    setFillBlanksData(
-      normalizeFillBlanksData(question.question_data)
-    );
-  }, [question, chapters]);
+    setCutJoinData(normalizeCutJoinData(question.question_data));
+    setConditionalData(normalizeConditionalData(question.question_data));
+    setOrderingData(normalizeOrderingData(question.question_data));
+    setFillBlanksData(normalizeFillBlanksData(question.question_data));
+  }, [question, chapters, levelId]);
+
+  // حفظ الاختيارات محلياً للاستخدام المتكرر
+  useEffect(() => {
+    if (chapterId && typeof window !== "undefined") {
+      localStorage.setItem(`qb_chapter_${levelId}`, chapterId);
+    }
+  }, [chapterId, levelId]);
+
+  useEffect(() => {
+    if (difficulty && typeof window !== "undefined") {
+      localStorage.setItem("qb_difficulty", difficulty);
+    }
+  }, [difficulty]);
+
+  useEffect(() => {
+    if (questionType && typeof window !== "undefined") {
+      localStorage.setItem("qb_type", questionType);
+    }
+  }, [questionType]);
+
+  // إدراج الحركات القرآنية في مكان المؤشر بدقة
+  const insertTashkeel = (char: string) => {
+    const input = lastActiveInputRef.current;
+    if (!input) return;
+
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    const text = input.value;
+    const newText = text.slice(0, start) + char + text.slice(end);
+
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      "value"
+    )?.set;
+    const nativeTextAreaValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype,
+      "value"
+    )?.set;
+
+    if (input instanceof HTMLInputElement && nativeInputValueSetter) {
+      nativeInputValueSetter.call(input, newText);
+    } else if (input instanceof HTMLTextAreaElement && nativeTextAreaValueSetter) {
+      nativeTextAreaValueSetter.call(input, newText);
+    }
+
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.focus();
+    setTimeout(() => {
+      input.setSelectionRange(start + char.length, start + char.length);
+    }, 0);
+  };
 
   const totalTablePoints = useMemo(() => {
     return tableData.rows.reduce((total, row) => {
@@ -521,7 +585,6 @@ export default function QuestionBuilder({
         total +
         tableData.columns.reduce((rowTotal, column) => {
           const cell = row.cells[column.id];
-
           return rowTotal + (cell?.points ?? 0);
         }, 0)
       );
@@ -530,10 +593,7 @@ export default function QuestionBuilder({
 
   const totalCutJoinPoints = useMemo(() => {
     return cutJoinData.sections.reduce(
-      (total, section) =>
-        total +
-        section.textPoints +
-        section.surahPoints,
+      (total, section) => total + section.textPoints + section.surahPoints,
       0
     );
   }, [cutJoinData]);
@@ -620,13 +680,10 @@ export default function QuestionBuilder({
 
       return {
         ...current,
-        columns: current.columns.filter(
-          (column) => column.id !== columnId
-        ),
+        columns: current.columns.filter((column) => column.id !== columnId),
         rows: current.rows.map((row) => {
           const cells = { ...row.cells };
           delete cells[columnId];
-
           return {
             ...row,
             cells,
@@ -636,45 +693,56 @@ export default function QuestionBuilder({
     });
   }
 
-  function updateTableColumnTitle(
-    columnId: string,
-    title: string
-  ) {
+  function updateTableColumnTitle(columnId: string, title: string) {
     setTableData((current) => ({
       ...current,
       columns: current.columns.map((column) =>
-        column.id === columnId
-          ? {
-              ...column,
-              title,
-            }
-          : column
+        column.id === columnId ? { ...column, title } : column
       ),
     }));
   }
 
+  // 1. إضافة صف جديد مع نسخ خيارات وقيم الصف السابق تلقائياً
   function addTableRow() {
     setTableData((current) => {
       const rowId = makeId("row");
-
+      const lastRow = current.rows[current.rows.length - 1];
       const cells: Record<string, TableCell> = {};
 
       current.columns.forEach((column) => {
-        cells[column.id] = {
-          id: makeId("cell"),
-          options: [
-            {
-              id: makeId("opt"),
-              text: "الخيار الأول",
-            },
-            {
-              id: makeId("opt"),
-              text: "الخيار الثاني",
-            },
-          ],
-          correctOptionId: "",
-          points: 1,
-        };
+        const lastCell = lastRow?.cells[column.id];
+
+        if (lastCell) {
+          // نسخ الخيارات والإجابة والنقاط مع إنشاء معرفات جديدة
+          const optionMap = new Map<string, string>();
+          const copiedOptions = lastCell.options.map((opt) => {
+            const newOptId = makeId("opt");
+            optionMap.set(opt.id, newOptId);
+            return {
+              id: newOptId,
+              text: opt.text,
+            };
+          });
+
+          cells[column.id] = {
+            id: makeId("cell"),
+            options: copiedOptions,
+            correctOptionId: lastCell.correctOptionId
+              ? optionMap.get(lastCell.correctOptionId) ?? ""
+              : "",
+            points: lastCell.points,
+          };
+        } else {
+          cells[column.id] = {
+            id: makeId("cell"),
+            options: [
+              { id: makeId("opt"), text: "الخيار الأول" },
+              { id: makeId("opt"), text: "الخيار الثاني" },
+            ],
+            correctOptionId: "",
+            points: 1,
+          };
+        }
       });
 
       return {
@@ -683,10 +751,59 @@ export default function QuestionBuilder({
           ...current.rows,
           {
             id: rowId,
-            label: `السؤال ${current.rows.length + 1}`,
+            label: "", // نتركه فارغاً ليكتب المعلم الكلمة الجديدة فوراً
             cells,
           },
         ],
+      };
+    });
+  }
+
+  // 2. زر تكرار صف بعينه (Duplicate Specific Row)
+  function duplicateTableRow(sourceRowIndex: number) {
+    setTableData((current) => {
+      const sourceRow = current.rows[sourceRowIndex];
+      if (!sourceRow) return current;
+
+      const newRowId = makeId("row");
+      const cells: Record<string, TableCell> = {};
+
+      current.columns.forEach((column) => {
+        const sourceCell = sourceRow.cells[column.id];
+        if (sourceCell) {
+          const optionMap = new Map<string, string>();
+          const copiedOptions = sourceCell.options.map((opt) => {
+            const newOptId = makeId("opt");
+            optionMap.set(opt.id, newOptId);
+            return {
+              id: newOptId,
+              text: opt.text,
+            };
+          });
+
+          cells[column.id] = {
+            id: makeId("cell"),
+            options: copiedOptions,
+            correctOptionId: sourceCell.correctOptionId
+              ? optionMap.get(sourceCell.correctOptionId) ?? ""
+              : "",
+            points: sourceCell.points,
+          };
+        }
+      });
+
+      const newRow = {
+        id: newRowId,
+        label: sourceRow.label ? `${sourceRow.label} (نسخة)` : "",
+        cells,
+      };
+
+      const newRows = [...current.rows];
+      newRows.splice(sourceRowIndex + 1, 0, newRow);
+
+      return {
+        ...current,
+        rows: newRows,
       };
     });
   }
@@ -699,26 +816,16 @@ export default function QuestionBuilder({
 
       return {
         ...current,
-        rows: current.rows.filter(
-          (row) => row.id !== rowId
-        ),
+        rows: current.rows.filter((row) => row.id !== rowId),
       };
     });
   }
 
-  function updateTableRowLabel(
-    rowId: string,
-    label: string
-  ) {
+  function updateTableRowLabel(rowId: string, label: string) {
     setTableData((current) => ({
       ...current,
       rows: current.rows.map((row) =>
-        row.id === rowId
-          ? {
-              ...row,
-              label,
-            }
-          : row
+        row.id === rowId ? { ...row, label } : row
       ),
     }));
   }
@@ -731,15 +838,9 @@ export default function QuestionBuilder({
     setTableData((current) => ({
       ...current,
       rows: current.rows.map((row) => {
-        if (row.id !== rowId) {
-          return row;
-        }
-
+        if (row.id !== rowId) return row;
         const existingCell = row.cells[columnId];
-
-        if (!existingCell) {
-          return row;
-        }
+        if (!existingCell) return row;
 
         return {
           ...row,
@@ -752,10 +853,7 @@ export default function QuestionBuilder({
     }));
   }
 
-  function addTableCellOption(
-    rowId: string,
-    columnId: string
-  ) {
+  function addTableCellOption(rowId: string, columnId: string) {
     updateTableCell(rowId, columnId, (cell) => ({
       ...cell,
       options: [
@@ -777,12 +875,7 @@ export default function QuestionBuilder({
     updateTableCell(rowId, columnId, (cell) => ({
       ...cell,
       options: cell.options.map((option) =>
-        option.id === optionId
-          ? {
-              ...option,
-              text,
-            }
-          : option
+        option.id === optionId ? { ...option, text } : option
       ),
     }));
   }
@@ -793,21 +886,14 @@ export default function QuestionBuilder({
     optionId: string
   ) {
     updateTableCell(rowId, columnId, (cell) => {
-      if (cell.options.length <= 2) {
-        return cell;
-      }
-
-      const options = cell.options.filter(
-        (option) => option.id !== optionId
-      );
+      if (cell.options.length <= 2) return cell;
+      const options = cell.options.filter((option) => option.id !== optionId);
 
       return {
         ...cell,
         options,
         correctOptionId:
-          cell.correctOptionId === optionId
-            ? ""
-            : cell.correctOptionId,
+          cell.correctOptionId === optionId ? "" : cell.correctOptionId,
       };
     });
   }
@@ -853,30 +939,17 @@ export default function QuestionBuilder({
 
   function removeCutJoinSection(id: string) {
     setCutJoinData((current) => {
-      if (current.sections.length <= 1) {
-        return current;
-      }
-
+      if (current.sections.length <= 1) return current;
       return {
-        sections: current.sections.filter(
-          (section) => section.id !== id
-        ),
+        sections: current.sections.filter((section) => section.id !== id),
       };
     });
   }
 
-  function updateCutJoinSection(
-    id: string,
-    patch: Partial<CutJoinSection>
-  ) {
+  function updateCutJoinSection(id: string, patch: Partial<CutJoinSection>) {
     setCutJoinData((current) => ({
       sections: current.sections.map((section) =>
-        section.id === id
-          ? {
-              ...section,
-              ...patch,
-            }
-          : section
+        section.id === id ? { ...section, ...patch } : section
       ),
     }));
   }
@@ -887,10 +960,7 @@ export default function QuestionBuilder({
         section.id === id
           ? {
               ...section,
-              acceptedKeywords: [
-                ...section.acceptedKeywords,
-                "",
-              ],
+              acceptedKeywords: [...section.acceptedKeywords, ""],
             }
           : section
       ),
@@ -904,16 +974,9 @@ export default function QuestionBuilder({
   ) {
     setCutJoinData((current) => ({
       sections: current.sections.map((section) => {
-        if (section.id !== id) {
-          return section;
-        }
-
-        const acceptedKeywords = [
-          ...section.acceptedKeywords,
-        ];
-
+        if (section.id !== id) return section;
+        const acceptedKeywords = [...section.acceptedKeywords];
         acceptedKeywords[keywordIndex] = value;
-
         return {
           ...section,
           acceptedKeywords,
@@ -922,26 +985,17 @@ export default function QuestionBuilder({
     }));
   }
 
-  function removeCutJoinKeyword(
-    id: string,
-    keywordIndex: number
-  ) {
+  function removeCutJoinKeyword(id: string, keywordIndex: number) {
     setCutJoinData((current) => ({
       sections: current.sections.map((section) => {
-        if (section.id !== id) {
-          return section;
-        }
-
-        if (section.acceptedKeywords.length <= 1) {
-          return section;
-        }
+        if (section.id !== id) return section;
+        if (section.acceptedKeywords.length <= 1) return section;
 
         return {
           ...section,
-          acceptedKeywords:
-            section.acceptedKeywords.filter(
-              (_, index) => index !== keywordIndex
-            ),
+          acceptedKeywords: section.acceptedKeywords.filter(
+            (_, index) => index !== keywordIndex
+          ),
         };
       }),
     }));
@@ -950,7 +1004,6 @@ export default function QuestionBuilder({
   function addConditionalNode() {
     setConditionalData((current) => {
       const nodeId = makeId("node");
-
       return {
         ...current,
         nodes: [
@@ -959,14 +1012,8 @@ export default function QuestionBuilder({
             id: nodeId,
             prompt: "",
             options: [
-              {
-                id: makeId("opt"),
-                text: "",
-              },
-              {
-                id: makeId("opt"),
-                text: "",
-              },
+              { id: makeId("opt"), text: "" },
+              { id: makeId("opt"), text: "" },
             ],
             correctOptionId: "",
             points: 1,
@@ -979,30 +1026,19 @@ export default function QuestionBuilder({
 
   function removeConditionalNode(nodeId: string) {
     setConditionalData((current) => {
-      if (current.nodes.length <= 1) {
-        return current;
-      }
-
-      const nodes = current.nodes.filter(
-        (node) => node.id !== nodeId
-      );
+      if (current.nodes.length <= 1) return current;
+      const nodes = current.nodes.filter((node) => node.id !== nodeId);
 
       return {
         startNodeId:
-          current.startNodeId === nodeId
-            ? nodes[0].id
-            : current.startNodeId,
+          current.startNodeId === nodeId ? nodes[0].id : current.startNodeId,
         nodes: nodes.map((node) => ({
           ...node,
           nextByOption: Object.fromEntries(
-            Object.entries(node.nextByOption).map(
-              ([optionId, nextNodeId]) => [
-                optionId,
-                nextNodeId === nodeId
-                  ? null
-                  : nextNodeId,
-              ]
-            )
+            Object.entries(node.nextByOption).map(([optionId, nextNodeId]) => [
+              optionId,
+              nextNodeId === nodeId ? null : nextNodeId,
+            ])
           ),
         })),
       };
@@ -1016,12 +1052,7 @@ export default function QuestionBuilder({
     setConditionalData((current) => ({
       ...current,
       nodes: current.nodes.map((node) =>
-        node.id === nodeId
-          ? {
-              ...node,
-              ...patch,
-            }
-          : node
+        node.id === nodeId ? { ...node, ...patch } : node
       ),
     }));
   }
@@ -1033,51 +1064,29 @@ export default function QuestionBuilder({
         node.id === nodeId
           ? {
               ...node,
-              options: [
-                ...node.options,
-                {
-                  id: makeId("opt"),
-                  text: "",
-                },
-              ],
+              options: [...node.options, { id: makeId("opt"), text: "" }],
             }
           : node
       ),
     }));
   }
 
-  function removeConditionalOption(
-    nodeId: string,
-    optionId: string
-  ) {
+  function removeConditionalOption(nodeId: string, optionId: string) {
     setConditionalData((current) => ({
       ...current,
       nodes: current.nodes.map((node) => {
-        if (node.id !== nodeId) {
-          return node;
-        }
+        if (node.id !== nodeId) return node;
+        if (node.options.length <= 2) return node;
 
-        if (node.options.length <= 2) {
-          return node;
-        }
-
-        const options = node.options.filter(
-          (option) => option.id !== optionId
-        );
-
-        const nextByOption = {
-          ...node.nextByOption,
-        };
-
+        const options = node.options.filter((option) => option.id !== optionId);
+        const nextByOption = { ...node.nextByOption };
         delete nextByOption[optionId];
 
         return {
           ...node,
           options,
           correctOptionId:
-            node.correctOptionId === optionId
-              ? ""
-              : node.correctOptionId,
+            node.correctOptionId === optionId ? "" : node.correctOptionId,
           nextByOption,
         };
       }),
@@ -1096,12 +1105,7 @@ export default function QuestionBuilder({
           ? {
               ...node,
               options: node.options.map((option) =>
-                option.id === optionId
-                  ? {
-                      ...option,
-                      text,
-                    }
-                  : option
+                option.id === optionId ? { ...option, text } : option
               ),
             }
           : node
@@ -1122,8 +1126,7 @@ export default function QuestionBuilder({
               ...node,
               nextByOption: {
                 ...node.nextByOption,
-                [optionId]:
-                  nextNodeId === "" ? null : nextNodeId,
+                [optionId]: nextNodeId === "" ? null : nextNodeId,
               },
             }
           : node
@@ -1134,13 +1137,7 @@ export default function QuestionBuilder({
   function addOrderingItem() {
     setOrderingData((current) => ({
       ...current,
-      items: [
-        ...current.items,
-        {
-          id: makeId("item"),
-          text: "",
-        },
-      ],
+      items: [...current.items, { id: makeId("item"), text: "" }],
       correctOrder: [
         ...current.correctOrder,
         current.items.length > 0
@@ -1153,52 +1150,29 @@ export default function QuestionBuilder({
   function removeOrderingItem(id: string) {
     setOrderingData((current) => ({
       ...current,
-      items: current.items.filter(
-        (item) => item.id !== id
-      ),
-      correctOrder: current.correctOrder.filter(
-        (itemId) => itemId !== id
-      ),
+      items: current.items.filter((item) => item.id !== id),
+      correctOrder: current.correctOrder.filter((itemId) => itemId !== id),
     }));
   }
 
-  function updateOrderingItem(
-    id: string,
-    text: string
-  ) {
+  function updateOrderingItem(id: string, text: string) {
     setOrderingData((current) => ({
       ...current,
       items: current.items.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              text,
-            }
-          : item
+        item.id === id ? { ...item, text } : item
       ),
     }));
   }
 
-  function moveOrderingItem(
-    index: number,
-    direction: -1 | 1
-  ) {
+  function moveOrderingItem(index: number, direction: -1 | 1) {
     setOrderingData((current) => {
       const nextIndex = index + direction;
-
-      if (
-        nextIndex < 0 ||
-        nextIndex >= current.items.length
-      ) {
+      if (nextIndex < 0 || nextIndex >= current.items.length) {
         return current;
       }
 
       const items = [...current.items];
-
-      [items[index], items[nextIndex]] = [
-        items[nextIndex],
-        items[index],
-      ];
+      [items[index], items[nextIndex]] = [items[nextIndex], items[index]];
 
       return {
         ...current,
@@ -1215,20 +1189,8 @@ export default function QuestionBuilder({
 
       return {
         ...current,
-        parts: [
-          ...current.parts,
-          {
-            type: "blank",
-            blankId,
-          },
-        ],
-        answerBank: [
-          ...current.answerBank,
-          {
-            id: answerId,
-            text: "",
-          },
-        ],
+        parts: [...current.parts, { type: "blank", blankId }],
+        answerBank: [...current.answerBank, { id: answerId, text: "" }],
         blanks: [
           ...current.blanks,
           {
@@ -1244,89 +1206,55 @@ export default function QuestionBuilder({
   function addFillBlankText() {
     setFillBlanksData((current) => ({
       ...current,
-      parts: [
-        ...current.parts,
-        {
-          type: "text",
-          value: "",
-        },
-      ],
+      parts: [...current.parts, { type: "text", value: "" }],
     }));
   }
 
   function removeFillBlank(blankId: string) {
     setFillBlanksData((current) => {
-      const blank = current.blanks.find(
-        (item) => item.id === blankId
-      );
+      const blank = current.blanks.find((item) => item.id === blankId);
 
       return {
         ...current,
         parts: current.parts.filter(
-          (part) =>
-            part.type !== "blank" ||
-            part.blankId !== blankId
+          (part) => part.type !== "blank" || part.blankId !== blankId
         ),
-        blanks: current.blanks.filter(
-          (item) => item.id !== blankId
-        ),
+        blanks: current.blanks.filter((item) => item.id !== blankId),
         answerBank: blank
           ? current.answerBank.filter(
-              (answer) =>
-                answer.id !== blank.correctAnswerId
+              (answer) => answer.id !== blank.correctAnswerId
             )
           : current.answerBank,
       };
     });
   }
 
-  function updateFillBlankPoints(
-    blankId: string,
-    pointsValue: string
-  ) {
+  function updateFillBlankPoints(blankId: string, pointsValue: string) {
     setFillBlanksData((current) => ({
       ...current,
       blanks: current.blanks.map((blank) =>
         blank.id === blankId
-          ? {
-              ...blank,
-              points: toNumber(pointsValue, 1),
-            }
+          ? { ...blank, points: toNumber(pointsValue, 1) }
           : blank
       ),
     }));
   }
 
-  function updateFillBlankCorrectAnswer(
-    blankId: string,
-    answerId: string
-  ) {
+  function updateFillBlankCorrectAnswer(blankId: string, answerId: string) {
     setFillBlanksData((current) => ({
       ...current,
       blanks: current.blanks.map((blank) =>
-        blank.id === blankId
-          ? {
-              ...blank,
-              correctAnswerId: answerId,
-            }
-          : blank
+        blank.id === blankId ? { ...blank, correctAnswerId: answerId } : blank
       ),
     }));
   }
 
-  function updateFillBlankTextPart(
-    index: number,
-    value: string
-  ) {
+  function updateFillBlankTextPart(index: number, value: string) {
     setFillBlanksData((current) => ({
       ...current,
       parts: current.parts.map((part, partIndex) =>
-        partIndex === index &&
-        part.type === "text"
-          ? {
-              ...part,
-              value,
-            }
+        partIndex === index && part.type === "text"
+          ? { ...part, value }
           : part
       ),
     }));
@@ -1335,46 +1263,27 @@ export default function QuestionBuilder({
   function addAnswerBankOption() {
     setFillBlanksData((current) => ({
       ...current,
-      answerBank: [
-        ...current.answerBank,
-        {
-          id: makeId("answer"),
-          text: "",
-        },
-      ],
+      answerBank: [...current.answerBank, { id: makeId("answer"), text: "" }],
     }));
   }
 
   function removeAnswerBankOption(id: string) {
     setFillBlanksData((current) => ({
       ...current,
-      answerBank: current.answerBank.filter(
-        (answer) => answer.id !== id
-      ),
+      answerBank: current.answerBank.filter((answer) => answer.id !== id),
       blanks: current.blanks.map((blank) =>
         blank.correctAnswerId === id
-          ? {
-              ...blank,
-              correctAnswerId: "",
-            }
+          ? { ...blank, correctAnswerId: "" }
           : blank
       ),
     }));
   }
 
-  function updateAnswerBankOption(
-    id: string,
-    text: string
-  ) {
+  function updateAnswerBankOption(id: string, text: string) {
     setFillBlanksData((current) => ({
       ...current,
       answerBank: current.answerBank.map((answer) =>
-        answer.id === id
-          ? {
-              ...answer,
-              text,
-            }
-          : answer
+        answer.id === id ? { ...answer, text } : answer
       ),
     }));
   }
@@ -1383,19 +1292,14 @@ export default function QuestionBuilder({
     switch (questionType) {
       case "table":
         return tableData;
-
       case "cut_join":
         return cutJoinData;
-
       case "conditional":
         return conditionalData;
-
       case "ordering":
         return orderingData;
-
       case "fill_blanks":
         return fillBlanksData;
-
       case "mcq":
       default:
         return {};
@@ -1406,19 +1310,14 @@ export default function QuestionBuilder({
     switch (questionType) {
       case "table":
         return totalTablePoints;
-
       case "cut_join":
         return totalCutJoinPoints;
-
       case "conditional":
         return totalConditionalPoints;
-
       case "ordering":
         return orderingData.points;
-
       case "fill_blanks":
         return totalFillBlankPoints;
-
       case "mcq":
       default:
         return toNumber(points, 1);
@@ -1444,11 +1343,7 @@ export default function QuestionBuilder({
         return "يجب تعبئة الخيارات الأربعة.";
       }
 
-      if (
-        !["a", "b", "c", "d"].includes(
-          correctOption
-        )
-      ) {
+      if (!["a", "b", "c", "d"].includes(correctOption)) {
         return "حدد الإجابة الصحيحة.";
       }
     }
@@ -1503,10 +1398,7 @@ export default function QuestionBuilder({
           return `حدد السورة الصحيحة للقسم: ${section.title}`;
         }
 
-        if (
-          section.textPoints <= 0 ||
-          section.surahPoints <= 0
-        ) {
+        if (section.textPoints <= 0 || section.surahPoints <= 0) {
           return `النقاط للقسم "${section.title}" يجب أن تكون أكبر من صفر.`;
         }
       }
@@ -1541,11 +1433,7 @@ export default function QuestionBuilder({
         return "أضف عنصرين على الأقل لسؤال الترتيب.";
       }
 
-      if (
-        orderingData.items.some(
-          (item) => !item.text.trim()
-        )
-      ) {
+      if (orderingData.items.some((item) => !item.text.trim())) {
         return "أكمل نصوص جميع عناصر الترتيب.";
       }
 
@@ -1575,7 +1463,6 @@ export default function QuestionBuilder({
     }
 
     const calculatedPoints = getCalculatedPoints();
-
     if (!Number.isFinite(calculatedPoints) || calculatedPoints <= 0) {
       return "يجب أن يكون مجموع نقاط السؤال أكبر من صفر.";
     }
@@ -1583,15 +1470,11 @@ export default function QuestionBuilder({
     return "";
   }
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     resetMessages();
 
     const validationError = validateQuestion();
-
     if (validationError) {
       setError(validationError);
       return;
@@ -1612,53 +1495,30 @@ export default function QuestionBuilder({
         difficulty,
         explanation: explanation.trim() || null,
         isActive,
-        optionA:
-          questionType === "mcq"
-            ? optionA.trim()
-            : null,
-        optionB:
-          questionType === "mcq"
-            ? optionB.trim()
-            : null,
-        optionC:
-          questionType === "mcq"
-            ? optionC.trim()
-            : null,
-        optionD:
-          questionType === "mcq"
-            ? optionD.trim()
-            : null,
-        correctOption:
-          questionType === "mcq"
-            ? correctOption
-            : null,
+        optionA: questionType === "mcq" ? optionA.trim() : null,
+        optionB: questionType === "mcq" ? optionB.trim() : null,
+        optionC: questionType === "mcq" ? optionC.trim() : null,
+        optionD: questionType === "mcq" ? optionD.trim() : null,
+        correctOption: questionType === "mcq" ? correctOption : null,
         questionData: buildQuestionData(),
       };
 
-      const response = await fetch(
-        "/api/admin/questions",
-        {
-          method: question?.id ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch("/api/admin/questions", {
+        method: question?.id ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          result?.error ||
-            "تعذر حفظ السؤال."
-        );
+        throw new Error(result?.error || "تعذر حفظ السؤال.");
       }
 
       setSuccess(
-        question?.id
-          ? "تم تحديث السؤال بنجاح."
-          : "تم إضافة السؤال بنجاح."
+        question?.id ? "تم تحديث السؤال بنجاح." : "تم إضافة السؤال بنجاح."
       );
 
       if (!question?.id) {
@@ -1669,19 +1529,11 @@ export default function QuestionBuilder({
         setOptionC("");
         setOptionD("");
         setCorrectOption("a");
-        setQuestionType("mcq");
-        setPoints("1");
         setTableData(createEmptyTableData());
         setCutJoinData(createEmptyCutJoinData());
-        setConditionalData(
-          createEmptyConditionalData()
-        );
-        setOrderingData(
-          createEmptyOrderingData()
-        );
-        setFillBlanksData(
-          createEmptyFillBlanksData()
-        );
+        setConditionalData(createEmptyConditionalData());
+        setOrderingData(createEmptyOrderingData());
+        setFillBlanksData(createEmptyFillBlanksData());
       }
 
       onSaved?.();
@@ -1697,18 +1549,30 @@ export default function QuestionBuilder({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6"
-    >
+    <form onSubmit={handleSubmit} className="space-y-6" dir="rtl">
+      {/* شريط التشكيل القرآني السريع المشترك لجميع أنواع الأسئلة */}
+      <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-emerald-100 bg-[#f4f9f6] p-2.5">
+        <span className="ml-2 text-xs font-bold text-[#13593b]">
+          تشكيل وحركات سريعة:
+        </span>
+        {TASHKEEL_CHARS.map((t) => (
+          <button
+            key={t.name}
+            type="button"
+            onClick={() => insertTashkeel(t.char)}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-200 bg-white text-base font-bold text-[#13593b] shadow-sm transition hover:bg-[#13593b] hover:text-white active:scale-95"
+            title={t.name}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <div className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
         <div className="mb-5">
           <h2 className="text-xl font-bold text-[var(--foreground)]">
-            {isEditing
-              ? "تعديل السؤال"
-              : "إضافة سؤال جديد"}
+            {isEditing ? "تعديل السؤال" : "إضافة سؤال جديد"}
           </h2>
-
           <p className="mt-1 text-sm text-[var(--muted)]">
             اختر نوع السؤال، وستظهر لك الحقول الخاصة به تلقائيًا.
           </p>
@@ -1731,25 +1595,17 @@ export default function QuestionBuilder({
             <label className="mb-2 block text-sm font-semibold">
               نوع السؤال
             </label>
-
             <select
               value={questionType}
               onChange={(event) =>
-                changeQuestionType(
-                  event.target.value as QuestionType
-                )
+                changeQuestionType(event.target.value as QuestionType)
               }
               className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--primary)]"
             >
               {(
-                Object.keys(
-                  QUESTION_TYPE_LABELS
-                ) as QuestionType[]
+                Object.keys(QUESTION_TYPE_LABELS) as QuestionType[]
               ).map((type) => (
-                <option
-                  key={type}
-                  value={type}
-                >
+                <option key={type} value={type}>
                   {QUESTION_TYPE_LABELS[type]}
                 </option>
               ))}
@@ -1757,26 +1613,15 @@ export default function QuestionBuilder({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold">
-              الباب
-            </label>
-
+            <label className="mb-2 block text-sm font-semibold">الباب</label>
             <select
               value={chapterId}
-              onChange={(event) =>
-                setChapterId(event.target.value)
-              }
+              onChange={(event) => setChapterId(event.target.value)}
               className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--primary)]"
             >
-              <option value="">
-                اختر الباب
-              </option>
-
+              <option value="">اختر الباب</option>
               {chapters.map((chapter) => (
-                <option
-                  key={chapter.id}
-                  value={chapter.id}
-                >
+                <option key={chapter.id} value={chapter.id}>
                   {chapter.title}
                 </option>
               ))}
@@ -1784,28 +1629,18 @@ export default function QuestionBuilder({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold">
-              الصعوبة
-            </label>
-
+            <label className="mb-2 block text-sm font-semibold">الصعوبة</label>
             <select
               value={difficulty}
               onChange={(event) =>
-                setDifficulty(
-                  event.target.value as Difficulty
-                )
+                setDifficulty(event.target.value as Difficulty)
               }
               className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--primary)]"
             >
               {(
-                Object.keys(
-                  DIFFICULTY_LABELS
-                ) as Difficulty[]
+                Object.keys(DIFFICULTY_LABELS) as Difficulty[]
               ).map((item) => (
-                <option
-                  key={item}
-                  value={item}
-                >
+                <option key={item} value={item}>
                   {DIFFICULTY_LABELS[item]}
                 </option>
               ))}
@@ -1813,22 +1648,16 @@ export default function QuestionBuilder({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold">
-              النقاط
-            </label>
-
+            <label className="mb-2 block text-sm font-semibold">النقاط</label>
             <input
               type="number"
               min="0.25"
               step="0.25"
               value={points}
-              onChange={(event) =>
-                setPoints(event.target.value)
-              }
+              onChange={(event) => setPoints(event.target.value)}
               disabled={questionType !== "mcq"}
               className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none disabled:bg-slate-50 focus:border-[var(--primary)]"
             />
-
             {questionType !== "mcq" && (
               <p className="mt-1 text-xs text-[var(--muted)]">
                 يتم حساب النقاط تلقائيًا من أجزاء السؤال.
@@ -1841,12 +1670,10 @@ export default function QuestionBuilder({
           <label className="mb-2 block text-sm font-semibold">
             نص السؤال الرئيسي
           </label>
-
           <textarea
             value={questionText}
-            onChange={(event) =>
-              setQuestionText(event.target.value)
-            }
+            onFocus={(e) => (lastActiveInputRef.current = e.target)}
+            onChange={(event) => setQuestionText(event.target.value)}
             rows={4}
             placeholder="اكتب نص السؤال..."
             className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--primary)]"
@@ -1856,36 +1683,13 @@ export default function QuestionBuilder({
 
       {questionType === "mcq" && (
         <div className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
-          <h3 className="mb-4 text-lg font-bold">
-            خيارات سؤال ضع دائرة
-          </h3>
-
+          <h3 className="mb-4 text-lg font-bold">خيارات سؤال ضع دائرة</h3>
           <div className="space-y-3">
             {[
-              {
-                key: "a",
-                label: "أ",
-                value: optionA,
-                setter: setOptionA,
-              },
-              {
-                key: "b",
-                label: "ب",
-                value: optionB,
-                setter: setOptionB,
-              },
-              {
-                key: "c",
-                label: "ج",
-                value: optionC,
-                setter: setOptionC,
-              },
-              {
-                key: "d",
-                label: "د",
-                value: optionD,
-                setter: setOptionD,
-              },
+              { key: "a", label: "أ", value: optionA, setter: setOptionA },
+              { key: "b", label: "ب", value: optionB, setter: setOptionB },
+              { key: "c", label: "ج", value: optionC, setter: setOptionC },
+              { key: "d", label: "د", value: optionD, setter: setOptionD },
             ].map((option) => (
               <div
                 key={option.key}
@@ -1895,29 +1699,15 @@ export default function QuestionBuilder({
                   <input
                     type="radio"
                     name="correct-option"
-                    checked={
-                      correctOption ===
-                      option.key
-                    }
-                    onChange={() =>
-                      setCorrectOption(
-                        option.key
-                      )
-                    }
+                    checked={correctOption === option.key}
+                    onChange={() => setCorrectOption(option.key)}
                   />
-
-                  <span className="font-bold">
-                    {option.label}
-                  </span>
+                  <span className="font-bold">{option.label}</span>
                 </label>
-
                 <input
                   value={option.value}
-                  onChange={(event) =>
-                    option.setter(
-                      event.target.value
-                    )
-                  }
+                  onFocus={(e) => (lastActiveInputRef.current = e.target)}
+                  onChange={(event) => option.setter(event.target.value)}
                   placeholder={`الخيار ${option.label}`}
                   className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--primary)]"
                 />
@@ -1931,18 +1721,13 @@ export default function QuestionBuilder({
         <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold">
-                إعداد سؤال الجدول
-              </h3>
-
+              <h3 className="text-lg font-bold">إعداد سؤال الجدول</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">
-                يمكنك تحديد عدد الأعمدة والصفوف، ولكل خلية خياراتها وإجابتها ونقاطها الخاصة.
+                يمكنك تحديد عدد الأعمدة والصفوف، ويتم نسخ خيارات الصف تلقائياً عند إضافة صف جديد لتسريع الإدخال.
               </p>
             </div>
-
             <div className="rounded-xl bg-[var(--primary-light)] px-4 py-2 text-sm font-bold text-[var(--primary-dark)]">
-              مجموع النقاط:{" "}
-              {totalTablePoints}
+              مجموع النقاط: {totalTablePoints}
             </div>
           </div>
 
@@ -1954,13 +1739,12 @@ export default function QuestionBuilder({
             >
               + إضافة عمود
             </button>
-
             <button
               type="button"
               onClick={addTableRow}
               className="rounded-xl bg-[var(--gold)] px-4 py-2 text-sm font-semibold text-white"
             >
-              + إضافة صف
+              + إضافة صف (منسوخ تلقائيًا)
             </button>
           </div>
 
@@ -1969,248 +1753,194 @@ export default function QuestionBuilder({
               <thead>
                 <tr className="bg-slate-50">
                   <th className="border border-[var(--border)] p-3 text-right">
-                    الصف
+                    الكلمة / السؤال
                   </th>
-
-                  {tableData.columns.map(
-                    (column) => (
-                      <th
-                        key={column.id}
-                        className="border border-[var(--border)] p-3"
-                      >
-                        <div className="space-y-2">
-                          <input
-                            value={column.title}
-                            onChange={(event) =>
-                              updateTableColumnTitle(
-                                column.id,
-                                event.target.value
-                              )
-                            }
-                            className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
-                          />
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              removeTableColumn(
-                                column.id
-                              )
-                            }
-                            className="text-xs font-semibold text-red-600"
-                          >
-                            حذف العمود
-                          </button>
-                        </div>
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
-
-              <tbody>
-                {tableData.rows.map(
-                  (row) => (
-                    <tr key={row.id}>
-                      <td className="w-44 border border-[var(--border)] p-3 align-top">
+                  {tableData.columns.map((column) => (
+                    <th
+                      key={column.id}
+                      className="border border-[var(--border)] p-3"
+                    >
+                      <div className="space-y-2">
                         <input
-                          value={row.label}
+                          value={column.title}
+                          onFocus={(e) => (lastActiveInputRef.current = e.target)}
                           onChange={(event) =>
-                            updateTableRowLabel(
-                              row.id,
-                              event.target.value
-                            )
+                            updateTableColumnTitle(column.id, event.target.value)
                           }
-                          className="mb-2 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+                          className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
                         />
-
                         <button
                           type="button"
-                          onClick={() =>
-                            removeTableRow(
-                              row.id
-                            )
-                          }
+                          onClick={() => removeTableColumn(column.id)}
                           className="text-xs font-semibold text-red-600"
+                        >
+                          حذف العمود
+                        </button>
+                      </div>
+                    </th>
+                  ))}
+                  <th className="w-28 border border-[var(--border)] p-3 text-center">
+                    الإجراءات
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {tableData.rows.map((row, rowIndex) => (
+                  <tr key={row.id}>
+                    <td className="w-48 border border-[var(--border)] p-3 align-top">
+                      <input
+                        value={row.label}
+                        onFocus={(e) => (lastActiveInputRef.current = e.target)}
+                        onChange={(event) =>
+                          updateTableRowLabel(row.id, event.target.value)
+                        }
+                        placeholder="الكلمة القرآنية..."
+                        className="mb-2 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold"
+                      />
+                    </td>
+
+                    {tableData.columns.map((column) => {
+                      const cell = row.cells[column.id];
+                      if (!cell) {
+                        return (
+                          <td
+                            key={column.id}
+                            className="border border-[var(--border)] p-3"
+                          >
+                            خلية غير موجودة
+                          </td>
+                        );
+                      }
+
+                      return (
+                        <td
+                          key={column.id}
+                          className="min-w-[280px] border border-[var(--border)] p-3 align-top"
+                        >
+                          <div className="space-y-3">
+                            <div>
+                              <div className="mb-2 text-xs font-bold text-[var(--muted)]">
+                                الخيارات
+                              </div>
+                              <div className="space-y-2">
+                                {cell.options.map((option, optionIndex) => (
+                                  <div
+                                    key={option.id}
+                                    className="flex gap-2"
+                                  >
+                                    <input
+                                      value={option.text}
+                                      onFocus={(e) =>
+                                        (lastActiveInputRef.current = e.target)
+                                      }
+                                      onChange={(event) =>
+                                        updateTableCellOption(
+                                          row.id,
+                                          column.id,
+                                          option.id,
+                                          event.target.value
+                                        )
+                                      }
+                                      placeholder={`الخيار ${optionIndex + 1}`}
+                                      className="min-w-0 flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        removeTableCellOption(
+                                          row.id,
+                                          column.id,
+                                          option.id
+                                        )
+                                      }
+                                      className="rounded-lg px-2 text-red-600"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  addTableCellOption(row.id, column.id)
+                                }
+                                className="mt-2 text-xs font-semibold text-[var(--primary)]"
+                              >
+                                + إضافة خيار
+                              </button>
+                            </div>
+
+                            <div>
+                              <label className="mb-1 block text-xs font-bold text-[var(--muted)]">
+                                الإجابة الصحيحة
+                              </label>
+                              <select
+                                value={cell.correctOptionId}
+                                onChange={(event) =>
+                                  updateTableCellCorrectOption(
+                                    row.id,
+                                    column.id,
+                                    event.target.value
+                                  )
+                                }
+                                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+                              >
+                                <option value="">اختر الإجابة</option>
+                                {cell.options.map((option) => (
+                                  <option key={option.id} value={option.id}>
+                                    {option.text || "خيار بدون نص"}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="mb-1 block text-xs font-bold text-[var(--muted)]">
+                                نقاط الخلية
+                              </label>
+                              <input
+                                type="number"
+                                min="0.25"
+                                step="0.25"
+                                value={cell.points}
+                                onChange={(event) =>
+                                  updateTableCellPoints(
+                                    row.id,
+                                    column.id,
+                                    event.target.value
+                                  )
+                                }
+                                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      );
+                    })}
+
+                    <td className="w-28 border border-[var(--border)] p-3 text-center align-top">
+                      <div className="flex flex-col gap-2">
+                        <button
+                          type="button"
+                          onClick={() => duplicateTableRow(rowIndex)}
+                          className="rounded-lg bg-emerald-50 px-2 py-1.5 text-xs font-bold text-[#13593b] hover:bg-emerald-100"
+                          title="تكرار هذا الصف بالكامل"
+                        >
+                          تكرار 📋
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeTableRow(row.id)}
+                          className="text-xs font-semibold text-red-600 hover:underline"
                         >
                           حذف الصف
                         </button>
-                      </td>
-
-                      {tableData.columns.map(
-                        (column) => {
-                          const cell =
-                            row.cells[
-                              column.id
-                            ];
-
-                          if (!cell) {
-                            return (
-                              <td
-                                key={column.id}
-                                className="border border-[var(--border)] p-3"
-                              >
-                                خلية غير موجودة
-                              </td>
-                            );
-                          }
-
-                          return (
-                            <td
-                              key={column.id}
-                              className="min-w-[280px] border border-[var(--border)] p-3 align-top"
-                            >
-                              <div className="space-y-3">
-                                <div>
-                                  <div className="mb-2 text-xs font-bold text-[var(--muted)]">
-                                    الخيارات
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    {cell.options.map(
-                                      (
-                                        option,
-                                        optionIndex
-                                      ) => (
-                                        <div
-                                          key={
-                                            option.id
-                                          }
-                                          className="flex gap-2"
-                                        >
-                                          <input
-                                            value={
-                                              option.text
-                                            }
-                                            onChange={(
-                                              event
-                                            ) =>
-                                              updateTableCellOption(
-                                                row.id,
-                                                column.id,
-                                                option.id,
-                                                event
-                                                  .target
-                                                  .value
-                                              )
-                                            }
-                                            placeholder={`الخيار ${
-                                              optionIndex +
-                                              1
-                                            }`}
-                                            className="min-w-0 flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-                                          />
-
-                                          <button
-                                            type="button"
-                                            onClick={() =>
-                                              removeTableCellOption(
-                                                row.id,
-                                                column.id,
-                                                option.id
-                                              )
-                                            }
-                                            className="rounded-lg px-2 text-red-600"
-                                          >
-                                            ×
-                                          </button>
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      addTableCellOption(
-                                        row.id,
-                                        column.id
-                                      )
-                                    }
-                                    className="mt-2 text-xs font-semibold text-[var(--primary)]"
-                                  >
-                                    + إضافة خيار
-                                  </button>
-                                </div>
-
-                                <div>
-                                  <label className="mb-1 block text-xs font-bold text-[var(--muted)]">
-                                    الإجابة الصحيحة
-                                  </label>
-
-                                  <select
-                                    value={
-                                      cell.correctOptionId
-                                    }
-                                    onChange={(
-                                      event
-                                    ) =>
-                                      updateTableCellCorrectOption(
-                                        row.id,
-                                        column.id,
-                                        event.target
-                                          .value
-                                      )
-                                    }
-                                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-                                  >
-                                    <option value="">
-                                      اختر الإجابة
-                                    </option>
-
-                                    {cell.options.map(
-                                      (
-                                        option
-                                      ) => (
-                                        <option
-                                          key={
-                                            option.id
-                                          }
-                                          value={
-                                            option.id
-                                          }
-                                        >
-                                          {option.text ||
-                                            "خيار بدون نص"}
-                                        </option>
-                                      )
-                                    )}
-                                  </select>
-                                </div>
-
-                                <div>
-                                  <label className="mb-1 block text-xs font-bold text-[var(--muted)]">
-                                    نقاط الخلية
-                                  </label>
-
-                                  <input
-                                    type="number"
-                                    min="0.25"
-                                    step="0.25"
-                                    value={
-                                      cell.points
-                                    }
-                                    onChange={(
-                                      event
-                                    ) =>
-                                      updateTableCellPoints(
-                                        row.id,
-                                        column.id,
-                                        event.target
-                                          .value
-                                      )
-                                    }
-                                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-                                  />
-                                </div>
-                              </div>
-                            </td>
-                          );
-                        }
-                      )}
-                    </tr>
-                  )
-                )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -2224,15 +1954,12 @@ export default function QuestionBuilder({
               <h3 className="text-lg font-bold">
                 إعداد المقطوع والموصول والتاءات
               </h3>
-
               <p className="mt-1 text-sm text-[var(--muted)]">
                 لكل قسم يحدد المعلم نوعه والكلمات المقبولة والسورة الصحيحة ونقاط كل جزء.
               </p>
             </div>
-
             <div className="rounded-xl bg-[var(--primary-light)] px-4 py-2 text-sm font-bold text-[var(--primary-dark)]">
-              مجموع النقاط:{" "}
-              {totalCutJoinPoints}
+              مجموع النقاط: {totalCutJoinPoints}
             </div>
           </div>
 
@@ -2245,235 +1972,164 @@ export default function QuestionBuilder({
           </button>
 
           <div className="space-y-4">
-            {cutJoinData.sections.map(
-              (section, index) => (
-                <div
-                  key={section.id}
-                  className="rounded-2xl border border-[var(--border)] bg-slate-50 p-4"
-                >
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <h4 className="font-bold">
-                      القسم {index + 1}
-                    </h4>
+            {cutJoinData.sections.map((section, index) => (
+              <div
+                key={section.id}
+                className="rounded-2xl border border-[var(--border)] bg-slate-50 p-4"
+              >
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h4 className="font-bold">القسم {index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => removeCutJoinSection(section.id)}
+                    className="text-sm font-semibold text-red-600"
+                  >
+                    حذف القسم
+                  </button>
+                </div>
 
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">
+                      اسم القسم
+                    </label>
+                    <input
+                      value={section.title}
+                      onFocus={(e) => (lastActiveInputRef.current = e.target)}
+                      onChange={(event) =>
+                        updateCutJoinSection(section.id, {
+                          title: event.target.value,
+                        })
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">
+                      النوع
+                    </label>
+                    <select
+                      value={section.type}
+                      onChange={(event) =>
+                        updateCutJoinSection(section.id, {
+                          type: event.target.value as CutJoinSection["type"],
+                        })
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
+                    >
+                      <option value="cut">مقطوعة</option>
+                      <option value="joined">موصولة</option>
+                      <option value="disputed">مختلف فيها</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">
+                      نقاط الإجابة النصية
+                    </label>
+                    <input
+                      type="number"
+                      min="0.25"
+                      step="0.25"
+                      value={section.textPoints}
+                      onChange={(event) =>
+                        updateCutJoinSection(section.id, {
+                          textPoints: toNumber(event.target.value, 1),
+                        })
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">
+                      نقاط السورة
+                    </label>
+                    <input
+                      type="number"
+                      min="0.25"
+                      step="0.25"
+                      value={section.surahPoints}
+                      onChange={(event) =>
+                        updateCutJoinSection(section.id, {
+                          surahPoints: toNumber(event.target.value, 1),
+                        })
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">
+                      رقم السورة الصحيحة
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="114"
+                      value={section.correctSurahId}
+                      onChange={(event) =>
+                        updateCutJoinSection(section.id, {
+                          correctSurahId: toNumber(event.target.value, 1),
+                        })
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
+                    />
+                    <p className="mt-1 text-xs text-[var(--muted)]">
+                      استخدم رقم السورة من 1 إلى 114.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <label className="text-sm font-semibold">
+                      الكلمات المقبولة
+                    </label>
                     <button
                       type="button"
-                      onClick={() =>
-                        removeCutJoinSection(
-                          section.id
-                        )
-                      }
-                      className="text-sm font-semibold text-red-600"
+                      onClick={() => addCutJoinKeyword(section.id)}
+                      className="text-xs font-semibold text-[var(--primary)]"
                     >
-                      حذف القسم
+                      + كلمة مقبولة
                     </button>
                   </div>
 
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold">
-                        اسم القسم
-                      </label>
-
-                      <input
-                        value={section.title}
-                        onChange={(event) =>
-                          updateCutJoinSection(
-                            section.id,
-                            {
-                              title:
-                                event.target.value,
-                            }
-                          )
-                        }
-                        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold">
-                        النوع
-                      </label>
-
-                      <select
-                        value={section.type}
-                        onChange={(event) =>
-                          updateCutJoinSection(
-                            section.id,
-                            {
-                              type:
-                                event.target.value as CutJoinSection["type"],
-                            }
-                          )
-                        }
-                        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
+                  <div className="space-y-2">
+                    {section.acceptedKeywords.map((keyword, keywordIndex) => (
+                      <div
+                        key={`${section.id}-${keywordIndex}`}
+                        className="flex gap-2"
                       >
-                        <option value="cut">
-                          مقطوعة
-                        </option>
-                        <option value="joined">
-                          موصولة
-                        </option>
-                        <option value="disputed">
-                          مختلف فيها
-                        </option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold">
-                        نقاط الإجابة النصية
-                      </label>
-
-                      <input
-                        type="number"
-                        min="0.25"
-                        step="0.25"
-                        value={
-                          section.textPoints
-                        }
-                        onChange={(event) =>
-                          updateCutJoinSection(
-                            section.id,
-                            {
-                              textPoints:
-                                toNumber(
-                                  event.target
-                                    .value,
-                                  1
-                                ),
-                            }
-                          )
-                        }
-                        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold">
-                        نقاط السورة
-                      </label>
-
-                      <input
-                        type="number"
-                        min="0.25"
-                        step="0.25"
-                        value={
-                          section.surahPoints
-                        }
-                        onChange={(event) =>
-                          updateCutJoinSection(
-                            section.id,
-                            {
-                              surahPoints:
-                                toNumber(
-                                  event.target
-                                    .value,
-                                  1
-                                ),
-                            }
-                          )
-                        }
-                        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold">
-                        رقم السورة الصحيحة
-                      </label>
-
-                      <input
-                        type="number"
-                        min="1"
-                        max="114"
-                        value={
-                          section.correctSurahId
-                        }
-                        onChange={(event) =>
-                          updateCutJoinSection(
-                            section.id,
-                            {
-                              correctSurahId:
-                                toNumber(
-                                  event.target
-                                    .value,
-                                  1
-                                ),
-                            }
-                          )
-                        }
-                        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
-                      />
-
-                      <p className="mt-1 text-xs text-[var(--muted)]">
-                        استخدم رقم السورة من 1 إلى 114.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <label className="text-sm font-semibold">
-                        الكلمات المقبولة
-                      </label>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          addCutJoinKeyword(
-                            section.id
-                          )
-                        }
-                        className="text-xs font-semibold text-[var(--primary)]"
-                      >
-                        + كلمة مقبولة
-                      </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      {section.acceptedKeywords.map(
-                        (
-                          keyword,
-                          keywordIndex
-                        ) => (
-                          <div
-                            key={`${section.id}-${keywordIndex}`}
-                            className="flex gap-2"
-                          >
-                            <input
-                              value={keyword}
-                              onChange={(event) =>
-                                updateCutJoinKeyword(
-                                  section.id,
-                                  keywordIndex,
-                                  event.target.value
-                                )
-                              }
-                              placeholder="اكتب كلمة أو عبارة مقبولة"
-                              className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-white px-3 py-2"
-                            />
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                removeCutJoinKeyword(
-                                  section.id,
-                                  keywordIndex
-                                )
-                              }
-                              className="rounded-xl px-3 text-red-600"
-                            >
-                              حذف
-                            </button>
-                          </div>
-                        )
-                      )}
-                    </div>
+                        <input
+                          value={keyword}
+                          onFocus={(e) => (lastActiveInputRef.current = e.target)}
+                          onChange={(event) =>
+                            updateCutJoinKeyword(
+                              section.id,
+                              keywordIndex,
+                              event.target.value
+                            )
+                          }
+                          placeholder="اكتب كلمة أو عبارة مقبولة"
+                          className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-white px-3 py-2"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removeCutJoinKeyword(section.id, keywordIndex)
+                          }
+                          className="rounded-xl px-3 text-red-600"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              )
-            )}
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -2482,18 +2138,13 @@ export default function QuestionBuilder({
         <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold">
-                السؤال المتسلسل / الشرطي
-              </h3>
-
+              <h3 className="text-lg font-bold">السؤال المتسلسل / الشرطي</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">
                 كل مرحلة لها خيارات، ويمكن ربط كل خيار بمرحلة تالية مختلفة.
               </p>
             </div>
-
             <div className="rounded-xl bg-[var(--primary-light)] px-4 py-2 text-sm font-bold text-[var(--primary-dark)]">
-              مجموع نقاط جميع المراحل:{" "}
-              {totalConditionalPoints}
+              مجموع نقاط جميع المراحل: {totalConditionalPoints}
             </div>
           </div>
 
@@ -2506,269 +2157,173 @@ export default function QuestionBuilder({
           </button>
 
           <div className="space-y-4">
-            {conditionalData.nodes.map(
-              (node, nodeIndex) => (
-                <div
-                  key={node.id}
-                  className="rounded-2xl border border-[var(--border)] bg-slate-50 p-4"
-                >
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <div className="font-bold">
-                      المرحلة {nodeIndex + 1}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="radio"
-                          name="conditional-start-node"
-                          checked={
-                            conditionalData.startNodeId ===
-                            node.id
-                          }
-                          onChange={() =>
-                            setConditionalData(
-                              (current) => ({
-                                ...current,
-                                startNodeId:
-                                  node.id,
-                              })
-                            )
-                          }
-                        />
-
-                        البداية
-                      </label>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removeConditionalNode(
-                            node.id
-                          )
-                        }
-                        className="text-sm font-semibold text-red-600"
-                      >
-                        حذف المرحلة
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-[1fr_180px]">
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold">
-                        نص المرحلة
-                      </label>
-
-                      <textarea
-                        value={node.prompt}
-                        onChange={(event) =>
-                          updateConditionalNode(
-                            node.id,
-                            {
-                              prompt:
-                                event.target
-                                  .value,
-                            }
-                          )
-                        }
-                        rows={3}
-                        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold">
-                        النقاط
-                      </label>
-
+            {conditionalData.nodes.map((node, nodeIndex) => (
+              <div
+                key={node.id}
+                className="rounded-2xl border border-[var(--border)] bg-slate-50 p-4"
+              >
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="font-bold">المرحلة {nodeIndex + 1}</div>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 text-sm">
                       <input
-                        type="number"
-                        min="0.25"
-                        step="0.25"
-                        value={node.points}
-                        onChange={(event) =>
-                          updateConditionalNode(
-                            node.id,
-                            {
-                              points:
-                                toNumber(
-                                  event.target
-                                    .value,
-                                  1
-                                ),
-                            }
-                          )
+                        type="radio"
+                        name="conditional-start-node"
+                        checked={conditionalData.startNodeId === node.id}
+                        onChange={() =>
+                          setConditionalData((current) => ({
+                            ...current,
+                            startNodeId: node.id,
+                          }))
                         }
-                        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
                       />
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <h4 className="text-sm font-bold">
-                        الخيارات
-                      </h4>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          addConditionalOption(
-                            node.id
-                          )
-                        }
-                        className="text-xs font-semibold text-[var(--primary)]"
-                      >
-                        + إضافة خيار
-                      </button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {node.options.map(
-                        (
-                          option,
-                          optionIndex
-                        ) => (
-                          <div
-                            key={option.id}
-                            className="rounded-xl border border-[var(--border)] bg-white p-3"
-                          >
-                            <div className="grid gap-2 md:grid-cols-[auto_1fr_auto]">
-                              <label className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-3">
-                                <input
-                                  type="radio"
-                                  name={`correct-${node.id}`}
-                                  checked={
-                                    node.correctOptionId ===
-                                    option.id
-                                  }
-                                  onChange={() =>
-                                    updateConditionalNode(
-                                      node.id,
-                                      {
-                                        correctOptionId:
-                                          option.id,
-                                      }
-                                    )
-                                  }
-                                />
-
-                                <span className="text-sm font-bold">
-                                  صحيح
-                                </span>
-                              </label>
-
-                              <input
-                                value={
-                                  option.text
-                                }
-                                onChange={(
-                                  event
-                                ) =>
-                                  updateConditionalOption(
-                                    node.id,
-                                    option.id,
-                                    event.target
-                                      .value
-                                  )
-                                }
-                                placeholder={`الخيار ${
-                                  optionIndex +
-                                  1
-                                }`}
-                                className="w-full rounded-lg border border-[var(--border)] px-3 py-2"
-                              />
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  removeConditionalOption(
-                                    node.id,
-                                    option.id
-                                  )
-                                }
-                                className="rounded-lg px-3 text-red-600"
-                              >
-                                حذف
-                              </button>
-                            </div>
-
-                            <div className="mt-3">
-                              <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">
-                                بعد اختيار هذا الخيار انتقل إلى
-                              </label>
-
-                              <select
-                                value={
-                                  node.nextByOption[
-                                    option.id
-                                  ] ?? ""
-                                }
-                                onChange={(
-                                  event
-                                ) =>
-                                  updateConditionalNext(
-                                    node.id,
-                                    option.id,
-                                    event.target
-                                      .value
-                                  )
-                                }
-                                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-                              >
-                                <option value="">
-                                  نهاية المسار
-                                </option>
-
-                                {conditionalData.nodes
-                                  .filter(
-                                    (
-                                      targetNode
-                                    ) =>
-                                      targetNode.id !==
-                                      node.id
-                                  )
-                                  .map(
-                                    (
-                                      targetNode,
-                                      targetIndex
-                                    ) => (
-                                      <option
-                                        key={
-                                          targetNode.id
-                                        }
-                                        value={
-                                          targetNode.id
-                                        }
-                                      >
-                                        المرحلة{" "}
-                                        {conditionalData.nodes.findIndex(
-                                          (
-                                            item
-                                          ) =>
-                                            item.id ===
-                                            targetNode.id
-                                        ) + 1}
-                                        {" — "}
-                                        {targetNode.prompt ||
-                                          `مرحلة ${
-                                            targetIndex +
-                                            1
-                                          }`}
-                                      </option>
-                                    )
-                                  )}
-                              </select>
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
+                      البداية
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => removeConditionalNode(node.id)}
+                      className="text-sm font-semibold text-red-600"
+                    >
+                      حذف المرحلة
+                    </button>
                   </div>
                 </div>
-              )
-            )}
+
+                <div className="grid gap-3 md:grid-cols-[1fr_180px]">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">
+                      نص المرحلة
+                    </label>
+                    <textarea
+                      value={node.prompt}
+                      onFocus={(e) => (lastActiveInputRef.current = e.target)}
+                      onChange={(event) =>
+                        updateConditionalNode(node.id, {
+                          prompt: event.target.value,
+                        })
+                      }
+                      rows={3}
+                      className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">
+                      النقاط
+                    </label>
+                    <input
+                      type="number"
+                      min="0.25"
+                      step="0.25"
+                      value={node.points}
+                      onChange={(event) =>
+                        updateConditionalNode(node.id, {
+                          points: toNumber(event.target.value, 1),
+                        })
+                      }
+                      className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <h4 className="text-sm font-bold">الخيارات</h4>
+                    <button
+                      type="button"
+                      onClick={() => addConditionalOption(node.id)}
+                      className="text-xs font-semibold text-[var(--primary)]"
+                    >
+                      + إضافة خيار
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {node.options.map((option, optionIndex) => (
+                      <div
+                        key={option.id}
+                        className="rounded-xl border border-[var(--border)] bg-white p-3"
+                      >
+                        <div className="grid gap-2 md:grid-cols-[auto_1fr_auto]">
+                          <label className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-3">
+                            <input
+                              type="radio"
+                              name={`correct-${node.id}`}
+                              checked={node.correctOptionId === option.id}
+                              onChange={() =>
+                                updateConditionalNode(node.id, {
+                                  correctOptionId: option.id,
+                                })
+                              }
+                            />
+                            <span className="text-sm font-bold">صحيح</span>
+                          </label>
+
+                          <input
+                            value={option.text}
+                            onFocus={(e) => (lastActiveInputRef.current = e.target)}
+                            onChange={(event) =>
+                              updateConditionalOption(
+                                node.id,
+                                option.id,
+                                event.target.value
+                              )
+                            }
+                            placeholder={`الخيار ${optionIndex + 1}`}
+                            className="w-full rounded-lg border border-[var(--border)] px-3 py-2"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              removeConditionalOption(node.id, option.id)
+                            }
+                            className="rounded-lg px-3 text-red-600"
+                          >
+                            حذف
+                          </button>
+                        </div>
+
+                        <div className="mt-3">
+                          <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">
+                            بعد اختيار هذا الخيار انتقل إلى
+                          </label>
+                          <select
+                            value={node.nextByOption[option.id] ?? ""}
+                            onChange={(event) =>
+                              updateConditionalNext(
+                                node.id,
+                                option.id,
+                                event.target.value
+                              )
+                            }
+                            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+                          >
+                            <option value="">نهاية المسار</option>
+                            {conditionalData.nodes
+                              .filter((targetNode) => targetNode.id !== node.id)
+                              .map((targetNode, targetIndex) => (
+                                <option
+                                  key={targetNode.id}
+                                  value={targetNode.id}
+                                >
+                                  المرحلة{" "}
+                                  {conditionalData.nodes.findIndex(
+                                    (item) => item.id === targetNode.id
+                                  ) + 1}
+                                  {" — "}
+                                  {targetNode.prompt ||
+                                    `مرحلة ${targetIndex + 1}`}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -2777,44 +2332,32 @@ export default function QuestionBuilder({
         <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold">
-                سؤال الترتيب
-              </h3>
-
+              <h3 className="text-lg font-bold">سؤال الترتيب</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">
                 ترتيب العناصر الظاهر هنا هو الترتيب الصحيح الذي سيعتمد عليه التصحيح.
               </p>
             </div>
-
             <div className="rounded-xl bg-[var(--primary-light)] px-4 py-2 text-sm font-bold text-[var(--primary-dark)]">
-              النقاط:{" "}
-              {orderingData.points}
+              النقاط: {orderingData.points}
             </div>
           </div>
 
           <div className="grid gap-3 md:grid-cols-[1fr_180px]">
             <div />
-
             <div>
               <label className="mb-1 block text-sm font-semibold">
                 مجموع النقاط
               </label>
-
               <input
                 type="number"
                 min="0.25"
                 step="0.25"
                 value={orderingData.points}
                 onChange={(event) =>
-                  setOrderingData(
-                    (current) => ({
-                      ...current,
-                      points: toNumber(
-                        event.target.value,
-                        1
-                      ),
-                    })
-                  )
+                  setOrderingData((current) => ({
+                    ...current,
+                    points: toNumber(event.target.value, 1),
+                  }))
                 }
                 className="w-full rounded-xl border border-[var(--border)] px-3 py-2"
               />
@@ -2824,95 +2367,60 @@ export default function QuestionBuilder({
           <label className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-slate-50 p-3 text-sm">
             <input
               type="checkbox"
-              checked={
-                orderingData.partialCredit
-              }
+              checked={orderingData.partialCredit}
               onChange={(event) =>
-                setOrderingData(
-                  (current) => ({
-                    ...current,
-                    partialCredit:
-                      event.target.checked,
-                  })
-                )
+                setOrderingData((current) => ({
+                  ...current,
+                  partialCredit: event.target.checked,
+                }))
               }
             />
-
             السماح بالدرجة الجزئية حسب عدد العناصر الموضوعة في أماكنها الصحيحة
           </label>
 
           <div className="space-y-2">
-            {orderingData.items.map(
-              (item, index) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-slate-50 p-3"
-                >
-                  <div className="w-8 text-center font-bold text-[var(--muted)]">
-                    {index + 1}
-                  </div>
-
-                  <input
-                    value={item.text}
-                    onChange={(event) =>
-                      updateOrderingItem(
-                        item.id,
-                        event.target.value
-                      )
-                    }
-                    placeholder={`العنصر ${
-                      index + 1
-                    }`}
-                    className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-white px-3 py-2"
-                  />
-
-                  <button
-                    type="button"
-                    disabled={index === 0}
-                    onClick={() =>
-                      moveOrderingItem(
-                        index,
-                        -1
-                      )
-                    }
-                    className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 disabled:opacity-40"
-                  >
-                    ↑
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={
-                      index ===
-                      orderingData.items
-                        .length -
-                        1
-                    }
-                    onClick={() =>
-                      moveOrderingItem(
-                        index,
-                        1
-                      )
-                    }
-                    className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 disabled:opacity-40"
-                  >
-                    ↓
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      removeOrderingItem(
-                        item.id
-                      )
-                    }
-                    className="rounded-lg px-2 text-red-600"
-                  >
-                    حذف
-                  </button>
+            {orderingData.items.map((item, index) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-slate-50 p-3"
+              >
+                <div className="w-8 text-center font-bold text-[var(--muted)]">
+                  {index + 1}
                 </div>
-              )
-            )}
+                <input
+                  value={item.text}
+                  onFocus={(e) => (lastActiveInputRef.current = e.target)}
+                  onChange={(event) =>
+                    updateOrderingItem(item.id, event.target.value)
+                  }
+                  placeholder={`العنصر ${index + 1}`}
+                  className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-white px-3 py-2"
+                />
+                <button
+                  type="button"
+                  disabled={index === 0}
+                  onClick={() => moveOrderingItem(index, -1)}
+                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 disabled:opacity-40"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  disabled={index === orderingData.items.length - 1}
+                  onClick={() => moveOrderingItem(index, 1)}
+                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 disabled:opacity-40"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeOrderingItem(item.id)}
+                  className="rounded-lg px-2 text-red-600"
+                >
+                  حذف
+                </button>
+              </div>
+            ))}
           </div>
 
           <button
@@ -2929,58 +2437,41 @@ export default function QuestionBuilder({
         <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold">
-                سؤال ملء الفراغات
-              </h3>
-
+              <h3 className="text-lg font-bold">سؤال ملء الفراغات</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">
                 أنشئ نص السؤال وأضف الفراغات وبنك الإجابات وحدد الإجابة الصحيحة لكل فراغ.
               </p>
             </div>
-
             <div className="rounded-xl bg-[var(--primary-light)] px-4 py-2 text-sm font-bold text-[var(--primary-dark)]">
-              مجموع النقاط:{" "}
-              {totalFillBlankPoints}
+              مجموع النقاط: {totalFillBlankPoints}
             </div>
           </div>
 
           <label className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-slate-50 p-3 text-sm">
             <input
               type="checkbox"
-              checked={
-                fillBlanksData.allowReuse
-              }
+              checked={fillBlanksData.allowReuse}
               onChange={(event) =>
-                setFillBlanksData(
-                  (current) => ({
-                    ...current,
-                    allowReuse:
-                      event.target.checked,
-                  })
-                )
+                setFillBlanksData((current) => ({
+                  ...current,
+                  allowReuse: event.target.checked,
+                }))
               }
             />
-
             السماح باستخدام نفس الخيار أكثر من مرة
           </label>
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <h4 className="font-bold">
-                تركيب نص السؤال
-              </h4>
-
+              <h4 className="font-bold">تركيب نص السؤال</h4>
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={
-                    addFillBlankText
-                  }
+                  onClick={addFillBlankText}
                   className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold"
                 >
                   + نص
                 </button>
-
                 <button
                   type="button"
                   onClick={addFillBlank}
@@ -2992,159 +2483,107 @@ export default function QuestionBuilder({
             </div>
 
             <div className="space-y-2">
-              {fillBlanksData.parts.map(
-                (part, index) => {
-                  if (
-                    part.type === "blank"
-                  ) {
-                    const blank =
-                      fillBlanksData.blanks.find(
-                        (item) =>
-                          item.id ===
-                          part.blankId
-                      );
-
-                    return (
-                      <div
-                        key={`${part.blankId}-${index}`}
-                        className="rounded-xl border-2 border-dashed border-[var(--gold)] bg-amber-50 p-3"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold">
-                            فراغ
-                          </span>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              removeFillBlank(
-                                part.blankId
-                              )
-                            }
-                            className="text-sm font-semibold text-red-600"
-                          >
-                            حذف
-                          </button>
-                        </div>
-
-                        {blank && (
-                          <div className="mt-3 grid gap-3 md:grid-cols-2">
-                            <div>
-                              <label className="mb-1 block text-xs font-semibold">
-                                الإجابة الصحيحة
-                              </label>
-
-                              <select
-                                value={
-                                  blank.correctAnswerId
-                                }
-                                onChange={(
-                                  event
-                                ) =>
-                                  updateFillBlankCorrectAnswer(
-                                    blank.id,
-                                    event
-                                      .target
-                                      .value
-                                  )
-                                }
-                                className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
-                              >
-                                <option value="">
-                                  اختر الإجابة
-                                </option>
-
-                                {fillBlanksData.answerBank.map(
-                                  (
-                                    answer
-                                  ) => (
-                                    <option
-                                      key={
-                                        answer.id
-                                      }
-                                      value={
-                                        answer.id
-                                      }
-                                    >
-                                      {answer.text ||
-                                        "خيار بدون نص"}
-                                    </option>
-                                  )
-                                )}
-                              </select>
-                            </div>
-
-                            <div>
-                              <label className="mb-1 block text-xs font-semibold">
-                                نقاط الفراغ
-                              </label>
-
-                              <input
-                                type="number"
-                                min="0.25"
-                                step="0.25"
-                                value={
-                                  blank.points
-                                }
-                                onChange={(
-                                  event
-                                ) =>
-                                  updateFillBlankPoints(
-                                    blank.id,
-                                    event
-                                      .target
-                                      .value
-                                  )
-                                }
-                                className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
+              {fillBlanksData.parts.map((part, index) => {
+                if (part.type === "blank") {
+                  const blank = fillBlanksData.blanks.find(
+                    (item) => item.id === part.blankId
+                  );
 
                   return (
                     <div
-                      key={`text-${index}`}
-                      className="rounded-xl border border-[var(--border)] bg-slate-50 p-3"
+                      key={`${part.blankId}-${index}`}
+                      className="rounded-xl border-2 border-dashed border-[var(--gold)] bg-amber-50 p-3"
                     >
-                      <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">
-                        جزء نصي
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold">فراغ</span>
+                        <button
+                          type="button"
+                          onClick={() => removeFillBlank(part.blankId)}
+                          className="text-sm font-semibold text-red-600"
+                        >
+                          حذف
+                        </button>
+                      </div>
 
-                      <textarea
-                        value={part.value}
-                        onChange={(event) =>
-                          updateFillBlankTextPart(
-                            index,
-                            event.target
-                              .value
-                          )
-                        }
-                        rows={2}
-                        placeholder="اكتب النص الذي يسبق أو يلي الفراغ..."
-                        className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
-                      />
+                      {blank && (
+                        <div className="mt-3 grid gap-3 md:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold">
+                              الإجابة الصحيحة
+                            </label>
+                            <select
+                              value={blank.correctAnswerId}
+                              onChange={(event) =>
+                                updateFillBlankCorrectAnswer(
+                                  blank.id,
+                                  event.target.value
+                                )
+                              }
+                              className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                            >
+                              <option value="">اختر الإجابة</option>
+                              {fillBlanksData.answerBank.map((answer) => (
+                                <option key={answer.id} value={answer.id}>
+                                  {answer.text || "خيار بدون نص"}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold">
+                              نقاط الفراغ
+                            </label>
+                            <input
+                              type="number"
+                              min="0.25"
+                              step="0.25"
+                              value={blank.points}
+                              onChange={(event) =>
+                                updateFillBlankPoints(
+                                  blank.id,
+                                  event.target.value
+                                )
+                              }
+                              className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 }
-              )}
+
+                return (
+                  <div
+                    key={`text-${index}`}
+                    className="rounded-xl border border-[var(--border)] bg-slate-50 p-3"
+                  >
+                    <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">
+                      جزء نصي
+                    </label>
+                    <textarea
+                      value={part.value}
+                      onFocus={(e) => (lastActiveInputRef.current = e.target)}
+                      onChange={(event) =>
+                        updateFillBlankTextPart(index, event.target.value)
+                      }
+                      rows={2}
+                      placeholder="اكتب النص الذي يسبق أو يلي الفراغ..."
+                      className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           <div className="rounded-2xl border border-[var(--border)] bg-slate-50 p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h4 className="font-bold">
-                بنك الإجابات
-              </h4>
-
+              <h4 className="font-bold">بنك الإجابات</h4>
               <button
                 type="button"
-                onClick={
-                  addAnswerBankOption
-                }
+                onClick={addAnswerBankOption}
                 className="text-sm font-semibold text-[var(--primary)]"
               >
                 + إضافة خيار
@@ -3152,44 +2591,29 @@ export default function QuestionBuilder({
             </div>
 
             <div className="space-y-2">
-              {fillBlanksData.answerBank.map(
-                (answer, index) => (
-                  <div
-                    key={answer.id}
-                    className="flex gap-2"
-                  >
-                    <div className="flex w-8 items-center justify-center font-bold text-[var(--muted)]">
-                      {index + 1}
-                    </div>
-
-                    <input
-                      value={answer.text}
-                      onChange={(event) =>
-                        updateAnswerBankOption(
-                          answer.id,
-                          event.target.value
-                        )
-                      }
-                      placeholder={`الخيار ${
-                        index + 1
-                      }`}
-                      className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-white px-3 py-2"
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        removeAnswerBankOption(
-                          answer.id
-                        )
-                      }
-                      className="rounded-lg px-3 text-red-600"
-                    >
-                      حذف
-                    </button>
+              {fillBlanksData.answerBank.map((answer, index) => (
+                <div key={answer.id} className="flex gap-2">
+                  <div className="flex w-8 items-center justify-center font-bold text-[var(--muted)]">
+                    {index + 1}
                   </div>
-                )
-              )}
+                  <input
+                    value={answer.text}
+                    onFocus={(e) => (lastActiveInputRef.current = e.target)}
+                    onChange={(event) =>
+                      updateAnswerBankOption(answer.id, event.target.value)
+                    }
+                    placeholder={`الخيار ${index + 1}`}
+                    className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-white px-3 py-2"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeAnswerBankOption(answer.id)}
+                    className="rounded-lg px-3 text-red-600"
+                  >
+                    حذف
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -3200,14 +2624,10 @@ export default function QuestionBuilder({
           <label className="mb-2 block text-sm font-semibold">
             شرح الإجابة
           </label>
-
           <textarea
             value={explanation}
-            onChange={(event) =>
-              setExplanation(
-                event.target.value
-              )
-            }
+            onFocus={(e) => (lastActiveInputRef.current = e.target)}
+            onChange={(event) => setExplanation(event.target.value)}
             rows={4}
             placeholder="شرح يظهر للطالب بعد تسليم الاختبار..."
             className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--primary)]"
@@ -3218,13 +2638,8 @@ export default function QuestionBuilder({
           <input
             type="checkbox"
             checked={isActive}
-            onChange={(event) =>
-              setIsActive(
-                event.target.checked
-              )
-            }
+            onChange={(event) => setIsActive(event.target.checked)}
           />
-
           السؤال نشط ويُستخدم في الاختبارات
         </label>
       </div>
