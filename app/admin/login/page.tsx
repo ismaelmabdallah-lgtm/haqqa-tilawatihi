@@ -13,66 +13,44 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setLoading(true);
     setErrorMessage("");
 
-    const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
 
     if (error) {
       console.error("Login error:", error);
-
-      setErrorMessage(
-        "البريد الإلكتروني أو كلمة المرور غير صحيحة."
-      );
-
+      setErrorMessage("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
       setLoading(false);
       return;
     }
 
-    if (!data.user) {
-      setErrorMessage(
-        "تعذر إنشاء جلسة تسجيل الدخول."
-      );
-
+    if (!data.user || !data.session) {
+      setErrorMessage("تعذر إنشاء جلسة تسجيل الدخول.");
       setLoading(false);
       return;
     }
 
-    /*
-     * ننتظر قليلًا حتى يتم تثبيت جلسة Supabase
-     * في المتصفح قبل الانتقال إلى Server Component.
-     */
-    await new Promise((resolve) =>
-      setTimeout(resolve, 300)
-    );
-
-    /*
-     * التحقق من أن الحساب لديه صلاحية الأدمن.
-     */
-    const response = await fetch(
-      "/api/admin/check",
-      {
-        method: "GET",
-        cache: "no-store",
-      }
-    );
+    // إرسال الـ Token داخل الـ Body بطلب POST لتفادي تضخم الـ Header وخطأ 431
+    const response = await fetch("/api/admin/check", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        token: data.session.access_token,
+      }),
+    });
 
     if (!response.ok) {
       await supabase.auth.signOut();
-
-      setErrorMessage(
-        "تم تسجيل الدخول، لكن هذا الحساب لا يملك صلاحية المشرف."
-      );
-
+      setErrorMessage("تم تسجيل الدخول، لكن هذا الحساب لا يملك صلاحية المشرف.");
       setLoading(false);
       return;
     }
@@ -111,10 +89,7 @@ export default function AdminLoginPage() {
             </p>
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-5"
-          >
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
               <label
@@ -128,9 +103,7 @@ export default function AdminLoginPage() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(event) =>
-                  setEmail(event.target.value)
-                }
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="example@email.com"
                 autoComplete="email"
                 required
@@ -151,9 +124,7 @@ export default function AdminLoginPage() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(event) =>
-                  setPassword(event.target.value)
-                }
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
@@ -174,9 +145,7 @@ export default function AdminLoginPage() {
               disabled={loading}
               className="w-full rounded-xl bg-[var(--primary)] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[var(--primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading
-                ? "جاري تسجيل الدخول..."
-                : "تسجيل الدخول"}
+              {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
             </button>
           </form>
         </div>

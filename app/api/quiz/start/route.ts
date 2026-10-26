@@ -17,6 +17,7 @@ type QuestionRow = {
   level_id: number;
   chapter_id: number;
   question_text: string;
+  audio_url: string | null;
   question_type: QuestionType;
   points: number;
   question_data: unknown;
@@ -299,6 +300,7 @@ function buildPublicQuestions(questions: QuestionRow[]) {
       number: index + 1,
       chapterId: question.chapter_id,
       questionText: question.question_text,
+      audioUrl: question.audio_url ?? null,
       questionType: question.question_type,
       points: Number(question.points),
       data:
@@ -402,6 +404,7 @@ export async function POST(request: Request) {
       level_id,
       chapter_id,
       question_text,
+      audio_url,
       question_type,
       points,
       question_data,

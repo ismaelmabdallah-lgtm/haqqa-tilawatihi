@@ -56,8 +56,6 @@ type Chapter = {
   is_active: boolean;
 };
 
-type Level = { id: number; title: string; description: string | null };
-
 type QuizSettings = {
   id: number;
   level_id: number;
@@ -263,7 +261,8 @@ export default async function QuestionsLevelPage({
               <h2 className="text-xl font-black">جاهزية الاختبار الشامل</h2>
               <p className="mt-1 text-sm leading-6 text-[var(--muted)]">يتم الحساب اعتمادًا على جميع الأسئلة النشطة، وليس الفلاتر الحالية.</p>
             </div>
-            <Link href={`/admin/quiz-settings/${numericLevelId}`} className="rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-bold text-white hover:bg-[var(--primary-dark)]">⚙️ إعدادات الاختبار</Link>
+            {/* تم تصحيح المسار ليتجه للمسار الفعلي الصحيح */}
+            <Link href={`/admin/quiz-settings?level=${numericLevelId}`} className="rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-bold text-white hover:bg-[var(--primary-dark)]">⚙️ إعدادات الاختبار</Link>
           </div>
 
           {settings ? (
@@ -300,7 +299,7 @@ export default async function QuestionsLevelPage({
 
         <section className="mb-8 rounded-3xl border border-[var(--border)] bg-white p-6 shadow-sm">
           <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div><h2 className="text-xl font-black">🔎 البحث والتصفية</h2><p className="mt-1 text-sm leading-6 text-[var(--muted)]">ابحث داخل نص السؤال والتعليل، أو صفِّ حسب الباب والنوع والصعوبة والحالة.</p></div>
+            <div><h2 className="text-xl font-black">🔎 البحث والتصفية</h2><p className="mt-1 text-sm leading-6 text-[var(--muted)]">ابحث داخل نص السؤال والتعليل، أو صفِّ حسب الباب والنوع والصعوبة والحالة.</p></div>
             {filterParams.size > 0 && <Link href={`/admin/questions/${numericLevelId}`} className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-700">✕ إعادة ضبط الفلاتر</Link>}
           </div>
           <form method="GET" className="grid gap-4 lg:grid-cols-5">

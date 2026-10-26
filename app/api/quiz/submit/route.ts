@@ -26,6 +26,7 @@ type QuestionRow = {
   level_id: number;
   chapter_id: number;
   question_text: string;
+  audio_url: string | null;
   option_a: string | null;
   option_b: string | null;
   option_c: string | null;
@@ -317,7 +318,8 @@ function gradeConditional(
     });
 
     if (!selectedOption) break;
-nodeId = node.nextByOption?.[selectedOption] ?? "";  }
+    nodeId = node.nextByOption?.[selectedOption] ?? "";
+  }
 
   if (maxPoints === 0) allCorrect = false;
 
@@ -584,6 +586,7 @@ export async function POST(request: Request) {
         level_id,
         chapter_id,
         question_text,
+        audio_url,
         option_a,
         option_b,
         option_c,
@@ -695,6 +698,7 @@ export async function POST(request: Request) {
         chapterTitle: title,
         questionText: question.question_text ?? "",
         questionType: question.question_type,
+        audioUrl: question.audio_url ?? null,
         points: roundPoints(grade.maxPoints),
         earnedPoints: roundPoints(grade.earnedPoints),
         isCorrect: grade.isFullyCorrect,

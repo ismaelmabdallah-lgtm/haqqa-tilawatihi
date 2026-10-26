@@ -19,6 +19,7 @@ type QuestionPayload = {
   levelId: number;
   chapterId: number;
   questionText: string;
+  audioUrl: string | null;
   questionType: QuestionType;
   points: number;
   difficulty: Difficulty;
@@ -151,6 +152,13 @@ function parsePayload(value: unknown):
   const correctOption =
     value.correctOption == null ? null : String(value.correctOption).trim();
 
+  // معالجة رابط الصوت
+  const rawAudioUrl = value.audioUrl ?? value.audio_url;
+  const audioUrl =
+    rawAudioUrl == null || String(rawAudioUrl).trim() === ""
+      ? null
+      : String(rawAudioUrl).trim();
+
   if (questionType === "mcq") {
     if (!optionA || !optionB || !optionC || !optionD) {
       return { ok: false, message: "يجب إدخال الخيارات الأربعة." };
@@ -173,6 +181,7 @@ function parsePayload(value: unknown):
       levelId,
       chapterId,
       questionText: value.questionText.trim(),
+      audioUrl,
       questionType: questionType as QuestionType,
       points,
       difficulty: difficulty as Difficulty,
@@ -246,6 +255,7 @@ export async function POST(request: Request) {
       level_id: payload.levelId,
       chapter_id: payload.chapterId,
       question_text: payload.questionText,
+      audio_url: payload.audioUrl,
       option_a: payload.optionA,
       option_b: payload.optionB,
       option_c: payload.optionC,
@@ -325,6 +335,7 @@ export async function PUT(request: Request) {
     const updateData = {
       chapter_id: payload.chapterId,
       question_text: payload.questionText,
+      audio_url: payload.audioUrl,
       option_a: payload.optionA,
       option_b: payload.optionB,
       option_c: payload.optionC,

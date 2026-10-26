@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import AudioPlayer from "@/app/components/AudioPlayer";
 import type {
   CellOption,
   ConditionalNode,
@@ -25,6 +26,7 @@ type Question = {
   level_id: number;
   chapter_id: number;
   question_text: string;
+  audio_url?: string | null;
   option_a: string | null;
   option_b: string | null;
   option_c: string | null;
@@ -435,6 +437,7 @@ export default function QuestionBuilder({
   );
 
   const [questionText, setQuestionText] = useState("");
+  const [audioUrl, setAudioUrl] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
 
   const [points, setPoints] = useState("1");
@@ -491,6 +494,7 @@ export default function QuestionBuilder({
       }
 
       setQuestionText("");
+      setAudioUrl("");
       setPoints("1");
       setExplanation("");
       setIsActive(true);
@@ -510,6 +514,7 @@ export default function QuestionBuilder({
     setQuestionType(question.question_type ?? "mcq");
     setChapterId(String(question.chapter_id));
     setQuestionText(question.question_text ?? "");
+    setAudioUrl(question.audio_url ?? "");
     setDifficulty(question.difficulty ?? "medium");
     setPoints(String(question.points ?? 1));
     setExplanation(question.explanation ?? "");
@@ -702,7 +707,7 @@ export default function QuestionBuilder({
     }));
   }
 
-  // 1. إضافة صف جديد مع نسخ خيارات وقيم الصف السابق تلقائياً
+  // إضافة صف جديد مع نسخ خيارات وقيم الصف السابق تلقائياً
   function addTableRow() {
     setTableData((current) => {
       const rowId = makeId("row");
@@ -713,7 +718,6 @@ export default function QuestionBuilder({
         const lastCell = lastRow?.cells[column.id];
 
         if (lastCell) {
-          // نسخ الخيارات والإجابة والنقاط مع إنشاء معرفات جديدة
           const optionMap = new Map<string, string>();
           const copiedOptions = lastCell.options.map((opt) => {
             const newOptId = makeId("opt");
@@ -751,7 +755,7 @@ export default function QuestionBuilder({
           ...current.rows,
           {
             id: rowId,
-            label: "", // نتركه فارغاً ليكتب المعلم الكلمة الجديدة فوراً
+            label: "",
             cells,
           },
         ],
@@ -759,7 +763,7 @@ export default function QuestionBuilder({
     });
   }
 
-  // 2. زر تكرار صف بعينه (Duplicate Specific Row)
+  // تكرار صف بعينه
   function duplicateTableRow(sourceRowIndex: number) {
     setTableData((current) => {
       const sourceRow = current.rows[sourceRowIndex];
@@ -1490,6 +1494,8 @@ export default function QuestionBuilder({
         levelId,
         chapterId: Number(chapterId),
         questionText: questionText.trim(),
+        audio_url: audioUrl.trim() || null,
+        audioUrl: audioUrl.trim() || null,
         questionType,
         points: calculatedPoints,
         difficulty,
@@ -1523,6 +1529,7 @@ export default function QuestionBuilder({
 
       if (!question?.id) {
         setQuestionText("");
+        setAudioUrl("");
         setExplanation("");
         setOptionA("");
         setOptionB("");
@@ -1678,6 +1685,32 @@ export default function QuestionBuilder({
             placeholder="اكتب نص السؤال..."
             className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--primary)]"
           />
+        </div>
+
+        {/* حقل الرابط الصوتي الاختياري مع زر المعاينة الفورية */}
+        <div className="mt-4 rounded-2xl border border-emerald-100 bg-[#f7faf8] p-4">
+          <label className="mb-1 block text-xs font-bold text-[#144d34]">
+            🎙️ رابط المقطع الصوتي للمثال التجويدي (اختياري)
+          </label>
+          <p className="mb-2 text-[11px] text-[var(--muted)]">
+            يمكنك وضع رابط مباشر لملف mp3 لسماع النطق التجويدي من قبل الطالب أثناء حل السؤال.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              type="url"
+              value={audioUrl}
+              onFocus={(e) => (lastActiveInputRef.current = e.target)}
+              onChange={(e) => setAudioUrl(e.target.value)}
+              placeholder="https://example.com/audio/sample.mp3"
+              className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-xs outline-none focus:border-[var(--primary)]"
+              dir="ltr"
+            />
+            {audioUrl.trim() && (
+              <div className="shrink-0">
+                <AudioPlayer src={audioUrl.trim()} label="معاينة الصوت" />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
